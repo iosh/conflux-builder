@@ -73,26 +73,48 @@ jobs:
           ref: ${{ inputs.commit_hash }}
           path: conflux-rust
 
-      - name: Run Build Script
-        id: build
-        shell: bash
-        run: |
-          # The working directory for the script is the builder repo
-          cd builder
-          /usr/bin/env bash ./scripts/build.sh
-        env:
-          COMMIT_HASH: ${{ inputs.commit_hash }}
-          VERSION_TAG: ${{ inputs.version_tag }}
-          OS: ${{ matrix.config.os }}
-          ARCH: ${{ matrix.config.arch }}
-          GLIBC_VERSION: ${{ inputs.glibc_version }}
-          GITHUB_WORKSPACE: ${{ github.workspace }}
+      - name: Build for Linux
+        if: matrix.config.os == 'linux'
+        id: linux_build
+        uses: ./builder/.github/workflows/actions/linux
+        with:
+          commit_hash: ${{ inputs.commit_hash }}
+          version_tag: ${{ inputs.version_tag }}
+          arch: ${{ matrix.config.arch }}
+          glibc_version: ${{ inputs.glibc_version }}
 
+      - name: Build for Windows
+        if: matrix.config.os == 'windows'
+        id: windows_build
+        uses: ./builder/.github/workflows/actions/windows
+        with:
+          commit_hash: ${{ inputs.commit_hash }}
+          version_tag: ${{ inputs.version_tag }}
+          arch: ${{ matrix.config.arch }}
+
+      - name: Build for macOS
+        if: matrix.config.os == 'macos'
+        id: macos_build
+        uses: ./builder/.github/workflows/actions/macos
+        with:
+          commit_hash: ${{ inputs.commit_hash }}
+          version_tag: ${{ inputs.version_tag }}
+          arch: ${{ matrix.config.arch }}
+      - name: Get Build Outputs
+        id: build_outputs
+        run: |
+          if [ "${{ matrix.config.os }}" == "linux" ]; then
+            echo "archive_path=${{ steps.linux_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
+          elif [ "${{ matrix.config.os }}" == "windows" ]; then
+            echo "archive_path=${{ steps.windows_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
+          elif [ "${{ matrix.config.os }}" == "macos" ]; then
+            echo "archive_path=${{ steps.macos_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
+          fi
       - name: Attest Build Provenance
         id: attest
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: "conflux-rust/target/release/${{ steps.build.outputs.archive_name }}"
+          subject-path: ${{ steps.build_outputs.outputs.archive_path }}
 
       - name: Get Short Commit Hash
         id: get_hash
@@ -103,8 +125,14 @@ jobs:
         with:
           tag_name: ${{ inputs.version_tag }}-${{ steps.get_hash.outputs.short_hash }}
           name: Release ${{ inputs.version_tag }} (commit ${{ steps.get_hash.outputs.short_hash }})
+          body: |
+            Build artifacts for Conflux ${{ inputs.version_tag }}
+
+            **Build Details:**
+            - Commit: ${{ inputs.commit_hash }}
+            - Platform: ${{ matrix.config.os }}-${{ matrix.config.arch }}
+            - Built on: ${{ github.run_id }}
           files: |
-            conflux-rust/target/release/${{ steps.build.outputs.archive_name }}
+            ${{ steps.build_outputs.outputs.archive_path }}
             ${{ steps.attest.outputs.bundle-path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          append_body: true

@@ -1,0 +1,64 @@
+name: "Windows Build Action"
+description: "Build Conflux for Windows platform"
+
+inputs:
+  commit_hash:
+    description: "The commit hash of conflux-rust to build"
+    required: true
+  version_tag:
+    description: "The version tag for the release"
+    required: true
+  arch:
+    description: "CPU Architecture"
+    required: true
+
+outputs:
+  archive_name:
+    description: "Name of the created archive"
+    value: ${{ steps.package.outputs.archive_name }}
+  archive_path:
+    description: "Path to the created archive"
+    value: ${{ steps.package.outputs.archive_path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Build Project
+      shell: bash
+      run: |
+        echo --- Building Conflux for Windows ---
+        cd conflux-rust
+        cargo build --release
+
+    - name: Package Windows Artifact
+      id: package
+      shell: bash
+      run: |
+        echo "--- Packaging Windows Artifact ---"
+        cd conflux-rust
+
+        # Generate artifact names
+        VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
+        VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
+
+        PLATFORM="pc-windows-msvc"
+        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}"
+        ARCHIVE_NAME="${ARTIFACT_NAME}.zip"
+        ARTIFACT_DIR="target/release/${ARTIFACT_NAME}"
+
+        # Create artifact directory and move binary
+        mkdir -p "${ARTIFACT_DIR}"
+        mv "target/release/conflux.exe" "${ARTIFACT_DIR}/"
+
+        # Create archive
+        cd target/release
+        powershell "Compress-Archive -Path '${ARTIFACT_NAME}' -DestinationPath '${ARCHIVE_NAME}'"
+        
+
+        # Output results
+        echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+        echo "archive_path=conflux-rust/target/release/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+        echo "Created archive: ${ARCHIVE_NAME}"
