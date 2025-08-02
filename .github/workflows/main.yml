@@ -7,7 +7,7 @@ on:
         description: "The commit hash of conflux-rust to build"
         required: true
       version_tag:
-        description: "The version tag corresponding to the commit (e.g., v3.0.0)"
+        description: "The version tag for the release (e.g., v3.0.0)"
         required: true
       os:
         description: "Operating System"
@@ -25,118 +25,86 @@ on:
           - x86_64
           - aarch64
       glibc_version:
-        description: "Glibc version (for Linux)"
+        description: "Glibc version for Linux builds (e.g., 2.31)"
         required: false
         default: "2.31"
 
 jobs:
-  check:
+  setup:
     runs-on: ubuntu-24.04
     outputs:
-      should_build: ${{ steps.check_params.outputs.should_build }}
-      config: ${{ steps.check_params.outputs.config }}
+      config: ${{ steps.generate_config.outputs.config }}
     steps:
-      - id: check_params
+      - name: Generate Build Config
+        id: generate_config
         run: |
-          CONFIGS='[
+          ALL_CONFIGS='[
             {"os": "linux",   "arch": "x86_64",  "runs-on": "ubuntu-24.04"},
             {"os": "linux",   "arch": "aarch64", "runs-on": "ubuntu-24.04"},
             {"os": "macos",   "arch": "x86_64",  "runs-on": "macos-13"},
             {"os": "macos",   "arch": "aarch64", "runs-on": "macos-14"},
             {"os": "windows", "arch": "x86_64",  "runs-on": "windows-2022"}
           ]'
-          MATCHING_CONFIG=$(echo "$CONFIGS" | jq -c ".[] | select(.os == \"${{ inputs.os }}\" and .arch == \"${{ inputs.arch }}\")")
+          MATCHING_CONFIG="[$(echo "$ALL_CONFIGS" | jq -c ".[] | select(.os == \"${{ inputs.os }}\" and .arch == \"${{ inputs.arch }}\")")]"
+          echo "config=$MATCHING_CONFIG" >> $GITHUB_OUTPUT
 
-          if [ -n "$MATCHING_CONFIG" ]; then
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            echo "config=$MATCHING_CONFIG" >> $GITHUB_OUTPUT
-          else
-            echo "should_build=false" >> $GITHUB_OUTPUT
-          fi
-
-  build:
-    needs: check
-    if: needs.check.outputs.should_build == 'true'
+  build-and-release:
+    needs: setup
+    if: ${{ needs.setup.outputs.config != '[]' }}
     strategy:
+      fail-fast: false
       matrix:
-        config: ${{ fromJson(needs.check.outputs.config) }}
+        config: ${{ fromJson(needs.setup.outputs.config) }}
     runs-on: ${{ matrix.config.runs-on }}
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     steps:
+      - name: Checkout Builder Repo
+        uses: actions/checkout@v4
+        with:
+          path: builder
+
       - name: Checkout conflux-rust
         uses: actions/checkout@v4
         with:
           repository: "Conflux-Chain/conflux-rust"
           ref: ${{ inputs.commit_hash }}
+          path: conflux-rust
 
-      - name: Print Build Environment
-        run: |
-          echo "Commit Hash: ${{ inputs.commit_hash }}"
-          echo "OS: ${{ matrix.config.os }}"
-          echo "Architecture: ${{ matrix.config.arch }}"
-          echo "Glibc Version: ${{ inputs.glibc_version }}"
-          echo "Runner: ${{ matrix.config.runs-on }}"
-
-      - name: Build Docker Image (Linux)
-        if: matrix.config.os == 'linux'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./${{ matrix.config.arch }}/glibc${{ inputs.glibc_version }}.dockerfile
-          tags: conflux-builder:latest
-          load: true
-
-      - name: Run Build Script in Docker (Linux)
-        if: matrix.config.os == 'linux'
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            -e COMMIT_HASH="${{ inputs.commit_hash }}" \
-            -e OS="${{ matrix.config.os }}" \
-            -e ARCH="${{ matrix.config.arch }}" \
-            -e GLIBC_VERSION="${{ inputs.glibc_version }}" \
-            -e VERSION_TAG="${{ inputs.version_tag }}" \
-            conflux-builder:latest \
-            bash -c "chmod +x ./scripts/build.sh && ./scripts/build.sh"
-
-      - name: Run Build Script (Non-Linux)
-        if: matrix.config.os != 'linux'
+      - name: Run Build Script
+        id: build
         shell: bash
         run: |
-          chmod +x ./scripts/build.sh
-          ./scripts/build.sh
+          # The working directory for the script is the builder repo
+          cd builder
+          /usr/bin/env bash ./scripts/build.sh
         env:
           COMMIT_HASH: ${{ inputs.commit_hash }}
+          VERSION_TAG: ${{ inputs.version_tag }}
           OS: ${{ matrix.config.os }}
           ARCH: ${{ matrix.config.arch }}
           GLIBC_VERSION: ${{ inputs.glibc_version }}
-          VERSION_TAG: ${{ inputs.version_tag }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
 
-      - name: Get Archive Name
-        id: get_archive_name
-        run: |
-          if [ "${{ matrix.config.os }}" == "windows" ]; then
-            PLATFORM="pc-windows-msvc"
-            ARCHIVE_EXT="zip"
-          else
-            if [ "${{ matrix.config.os }}" == "macos" ]; then
-              PLATFORM="apple-darwin"
-            else
-              PLATFORM="unknown-linux-gnu-glibc${{ inputs.glibc_version }}"
-            fi
-            ARCHIVE_EXT="tar.gz"
-          fi
-          VERSION_TAG_CLEANED=$(echo "${{ inputs.version_tag }}" | sed 's/^v//')
-          ARCHIVE_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ matrix.config.arch }}-${PLATFORM}.${ARCHIVE_EXT}"
-          SHORT_HASH=$(echo "${{ inputs.commit_hash }}" | cut -c1-7)
-          echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-          echo "short_hash=${SHORT_HASH}" >> $GITHUB_OUTPUT
+      - name: Attest Build Provenance
+        id: attest
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "conflux-rust/target/release/${{ steps.build.outputs.archive_name }}"
 
-      - name: Create Release and Upload Asset
+      - name: Get Short Commit Hash
+        id: get_hash
+        run: echo "short_hash=$(echo ${{ inputs.commit_hash }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Create or Update Release and Upload Assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.version_tag }}-${{ steps.get_archive_name.outputs.short_hash }}
-          name: Release ${{ inputs.version_tag }} (commit ${{ inputs.commit_hash }})
-          files: target/release/${{ steps.get_archive_name.outputs.archive_name }}
+          tag_name: ${{ inputs.version_tag }}-${{ steps.get_hash.outputs.short_hash }}
+          name: Release ${{ inputs.version_tag }} (commit ${{ steps.get_hash.outputs.short_hash }})
+          files: |
+            conflux-rust/target/release/${{ steps.build.outputs.archive_name }}
+            ${{ steps.attest.outputs.bundle-path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
