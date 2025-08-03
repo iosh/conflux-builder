@@ -47,7 +47,6 @@ jobs:
           ]'
           MATCHING_CONFIG="[$(echo "$ALL_CONFIGS" | jq -c ".[] | select(.os == \"${{ inputs.os }}\" and .arch == \"${{ inputs.arch }}\")")]"
           echo "config=$MATCHING_CONFIG" >> $GITHUB_OUTPUT
-          lscpu
 
   build-and-release:
     needs: setup
