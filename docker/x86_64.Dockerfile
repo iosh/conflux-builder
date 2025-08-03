@@ -6,7 +6,7 @@ FROM ubuntu:${UBUNTU_VERSION}
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y curl wget software-properties-common gnupg ca-certificates && \
+    apt-get install -y curl wget software-properties-common gnupg ca-certificates git && \
     wget https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
     ./llvm.sh 18 && \
@@ -23,5 +23,9 @@ ENV CC=clang-18
 ENV CXX=clang++-18
 ENV CXXFLAGS="-std=c++11 -stdlib=libc++"
 ENV LDFLAGS="-stdlib=libc++"
-
+ENV OPENSSL_LIB_DIR=/usr/lib/x86_64-linux-gnu
+ENV OPENSSL_INCLUDE_DIR=/usr/include
+ENV OPENSSL_STATIC=yes
 WORKDIR /workspace
+
+RUN git config --global --add safe.directory /workspace
