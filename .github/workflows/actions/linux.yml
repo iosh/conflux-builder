@@ -14,6 +14,9 @@ inputs:
   glibc_version:
     description: "Glibc version"
     required: true
+  openssl_version:
+    description: "OpenSSL version choice"
+    required: true
 
 outputs:
   archive_name:
@@ -78,6 +81,7 @@ runs:
         docker build \
           --build-arg UBUNTU_VERSION="${{ steps.ubuntu_version.outputs.ubuntu_version }}" \
           --build-arg UBUNTU_CODENAME="${{ steps.ubuntu_version.outputs.ubuntu_codename }}" \
+          --build-arg OPENSSL_CHOICE="${{ inputs.openssl_version }}" \
           -t "conflux-builder:${{ inputs.version_tag }}" \
           -f "docker/${{ inputs.arch }}.Dockerfile" .
 
