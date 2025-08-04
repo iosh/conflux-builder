@@ -27,7 +27,13 @@ on:
       glibc_version:
         description: "Glibc version for Linux builds (e.g., 2.31)"
         required: false
-        default: "2.31"
+        default: "2.39"
+        type: choice
+        options:
+          - "2.27"
+          - "2.31"
+          - "2.35"
+          - "2.39"
 
 jobs:
   setup:
