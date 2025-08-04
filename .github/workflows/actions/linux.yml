@@ -52,6 +52,24 @@ runs:
             exit 1
             ;;
         esac
+    - name: Set Build Configuration
+      id: build_config
+      shell: bash
+      run: |
+        case "${{ inputs.arch }}" in
+          "aarch64")
+            echo "target=aarch64-unknown-linux-gnu" >> $GITHUB_OUTPUT
+            echo "build_path=target/aarch64-unknown-linux-gnu/release" >> $GITHUB_OUTPUT
+            ;;
+          "x86_64")
+            echo "target=x86_64-unknown-linux-gnu" >> $GITHUB_OUTPUT
+            echo "build_path=target/x86_64-unknown-linux-gnu/release" >> $GITHUB_OUTPUT
+            ;;
+          *)
+            echo "Error: Unsupported architecture: ${{ inputs.arch }}"
+            exit 1
+            ;;
+        esac
 
     - name: Build Docker Image
       shell: bash
@@ -72,7 +90,7 @@ runs:
           -w /workspace \
           -e "ARCH=${{ inputs.arch }}" \
           "conflux-builder:${{ inputs.version_tag }}" \
-          bash -c "cargo build --release"
+          bash -c "cargo build --release --target ${{ steps.build_config.outputs.target }}"
 
     - name: Package Linux Artifact
       id: package
@@ -84,21 +102,22 @@ runs:
         VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
         VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
 
-        PLATFORM="unknown-linux-gnu-glibc${{ inputs.glibc_version }}"
+        TARGET="${{ steps.build_config.outputs.target }}"
+        BUILD_PATH="${{ steps.build_config.outputs.build_path }}"
+
+        PLATFORM="${TARGET}-glibc${{ inputs.glibc_version }}"
         ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
-        ARTIFACT_DIR="target/release/${ARTIFACT_NAME}"
-
+        ARTIFACT_DIR="${BUILD_PATH}/${ARTIFACT_NAME}"
 
         mkdir -p "${ARTIFACT_DIR}"
-        mv "target/release/conflux" "${ARTIFACT_DIR}/"
-
+        mv "${BUILD_PATH}/conflux" "${ARTIFACT_DIR}/"
 
         # Create archive
-        cd target/release
-        tar -czvf "${ARCHIVE_NAME}" "${ARTIFACT_NAME}"
+        cd "$(dirname "${BUILD_PATH}")"
+        tar -czvf "${ARCHIVE_NAME}" -C "$(basename "${BUILD_PATH}")" "${ARTIFACT_NAME}"
 
         # Output results
         echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "archive_path=conflux-rust/target/release/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+        echo "archive_path=conflux-rust/target/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
         echo "Created archive: ${ARCHIVE_NAME}"

@@ -33,7 +33,7 @@ RUN apt-get update && \
     rm llvm.sh
 
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain none -y
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain none -y && rustup default stable-x86_64-unknown-linux-gnu && rustup target add aarch64-unknown-linux-gnu
 
 
 ENV PATH="/root/.cargo/bin:${PATH}"
