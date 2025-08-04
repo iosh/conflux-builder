@@ -76,7 +76,7 @@ jobs:
       - name: Build for Linux
         if: matrix.config.os == 'linux'
         id: linux_build
-        uses: ./builder/.github/workflows/actions/linux
+        uses: ./builder/.github/workflows/actions/linux.yml
         with:
           commit_hash: ${{ inputs.commit_hash }}
           version_tag: ${{ inputs.version_tag }}
@@ -86,7 +86,7 @@ jobs:
       - name: Build for Windows
         if: matrix.config.os == 'windows'
         id: windows_build
-        uses: ./builder/.github/workflows/actions/windows
+        uses: ./builder/.github/workflows/actions/windows.yml
         with:
           commit_hash: ${{ inputs.commit_hash }}
           version_tag: ${{ inputs.version_tag }}
@@ -95,7 +95,7 @@ jobs:
       - name: Build for macOS
         if: matrix.config.os == 'macos'
         id: macos_build
-        uses: ./builder/.github/workflows/actions/macos
+        uses: ./builder/.github/workflows/actions/macos.yml
         with:
           commit_hash: ${{ inputs.commit_hash }}
           version_tag: ${{ inputs.version_tag }}
