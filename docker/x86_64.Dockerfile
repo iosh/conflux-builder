@@ -1,7 +1,7 @@
 
 ARG UBUNTU_VERSION=20.04
 ARG OPENSSL_CHOICE=openssl-3
-
+ARG COMPATIBILITY_MODE=false
 FROM ubuntu:${UBUNTU_VERSION}
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -37,7 +37,14 @@ RUN set -ex;\
     echo "${OPENSSL_SHA256} openssl.tar.gz" | sha256sum -c -; \
     tar -xzf openssl.tar.gz; \
     cd "openssl-${OPENSSL_VERSION}"; \
-    ./config --prefix=/opt/openssl --openssldir=/opt/openssl no-tests; \
+    CONFIG_FLAGS="--prefix=/opt/openssl --openssldir=/opt/openssl no-tests"; \
+    if [ "${COMPATIBILITY_MODE}" = "true" ]; then \
+        echo "OpenSSL: Compiling in compatibility mode (-march=x86-64 -mtune=generic)"; \
+        CONFIG_FLAGS="${CONFIG_FLAGS} -march=x86-64 -mtune=generic"; \
+    else \
+        echo "OpenSSL: Compiling in normal mode"; \
+    fi; \
+    ./config ${CONFIG_FLAGS}; \
     make -j$(nproc); \
     make install_sw; \
     cd ..; \

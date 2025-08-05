@@ -20,6 +20,9 @@ inputs:
   static_openssl:
     description: "Whether to statically link OpenSSL"
     required: true
+  compatibility_mode:
+    description: "Whether to enable compatibility mode"
+    required: true
 
 outputs:
   archive_name:
@@ -82,6 +85,22 @@ runs:
       shell: bash
       run: |
         OPENSSL_ENV_FLAG=""
+        CARGO_FEATURES_FLAG=""
+        DOCKER_BUILD_ARGS=""
+
+
+        if [[ "${{ inputs.compatibility_mode }}" == "true" ]]; then
+          echo "Compatibility mode ENABLED"
+          
+          DOCKER_BUILD_ARGS="--build-arg COMPATIBILITY_MODE=true"
+
+          CARGO_FEATURES_FLAG="--features \"rocksdb/portable\""
+          
+        else
+          echo "Compatibility mode DISABLED"
+        fi
+
+
         if [[ "${{ inputs.static_openssl }}" == "true" ]]; then
           echo "OpenSSL static linking ENABLED"
           OPENSSL_ENV_FLAG="-e OPENSSL_STATIC=yes"
@@ -89,7 +108,10 @@ runs:
           echo "OpenSSL dynamic linking ENABLED"
         fi
 
+        echo "docker_build_args=${DOCKER_BUILD_ARGS}" >> $GITHUB_OUTPUT
+        echo "cargo_features_flag=${CARGO_FEATURES_FLAG}" >> $GITHUB_OUTPUT
         echo "openssl_env_flag=${OPENSSL_ENV_FLAG}" >> $GITHUB_OUTPUT
+
     - name: Build Docker Image
       shell: bash
       run: |
@@ -98,6 +120,7 @@ runs:
           --build-arg UBUNTU_VERSION="${{ steps.ubuntu_version.outputs.ubuntu_version }}" \
           --build-arg UBUNTU_CODENAME="${{ steps.ubuntu_version.outputs.ubuntu_codename }}" \
           --build-arg OPENSSL_CHOICE="${{ inputs.openssl_version }}" \
+          ${{ steps.build_args.outputs.docker_build_args }} \
           -t "conflux-builder:${{ inputs.version_tag }}" \
           -f "docker/${{ inputs.arch }}.Dockerfile" .
 
@@ -111,7 +134,7 @@ runs:
           -e "ARCH=${{ inputs.arch }}" \
           ${{ steps.build_args.outputs.openssl_env_flag }} \
           "conflux-builder:${{ inputs.version_tag }}" \
-          bash -c "cargo build --release --target ${{ steps.build_config.outputs.target }}"
+          bash -c "cargo build --release --target ${{ steps.build_config.outputs.target }} ${{ steps.build_args.outputs.cargo_features_flag }}"
 
     - name: Package Linux Artifact
       id: package
@@ -130,23 +153,23 @@ runs:
 
         ARTIFACT_SUFFIX=""
         if [[ "${{ inputs.static_openssl }}" == "true" ]]; then
-          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-static"
+          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-static-openssl"
         fi
         if [[ "${{ inputs.compatibility_mode }}" == "true" ]]; then
-          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-compat"
+          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-portable"
         fi
 
         ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}${ARTIFACT_SUFFIX}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
         ARTIFACT_DIR="${BUILD_PATH}/${ARTIFACT_NAME}"
- 
+
         mkdir -p "${ARTIFACT_DIR}"
         mv "${BUILD_PATH}/conflux" "${ARTIFACT_DIR}/"
- 
+
         # Create archive
         cd "$(dirname "${BUILD_PATH}")"
         tar -czvf "${ARCHIVE_NAME}" -C "$(basename "${BUILD_PATH}")" "${ARTIFACT_NAME}"
- 
+
         # Output results
         echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
         echo "archive_path=conflux-rust/target/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT

@@ -2,6 +2,7 @@
 ARG UBUNTU_VERSION=20.04
 ARG UBUNTU_CODENAME=focal
 ARG OPENSSL_CHOICE=openssl-3
+ARG COMPATIBILITY_MODE=false
 
 FROM ubuntu:${UBUNTU_VERSION}
 
@@ -55,10 +56,14 @@ RUN set -ex;\
     echo "${OPENSSL_SHA256} openssl.tar.gz" | sha256sum -c -; \
     tar -xzf openssl.tar.gz; \
     cd "openssl-${OPENSSL_VERSION}"; \
-    perl ./Configure linux-aarch64 \
-    --prefix=/opt/openssl-aarch64 \
-    --openssldir=/opt/openssl-aarch64 \
-    no-tests; \
+    CONFIG_FLAGS="linux-aarch64 --prefix=/opt/openssl-aarch64 --openssldir=/opt/openssl-aarch64 no-tests"; \
+    if [ "${COMPATIBILITY_MODE}" = "true" ]; then \
+    echo "OpenSSL: Compiling in compatibility mode (-march=armv8-a -mtune=generic)"; \
+    CONFIG_FLAGS="${CONFIG_FLAGS} --march=armv8-a -mtune=generic"; \
+    else \
+    echo "OpenSSL: Compiling in normal mode"; \
+    fi; \
+    perl ./Configure ${CONFIG_FLAGS}; \
     make -j$(nproc); \
     make install_sw; \
     cd ..; \
