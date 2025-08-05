@@ -17,6 +17,9 @@ inputs:
   openssl_version:
     description: "OpenSSL version choice"
     required: true
+  static_openssl:
+    description: "Whether to statically link OpenSSL"
+    required: true
 
 outputs:
   archive_name:
@@ -74,6 +77,19 @@ runs:
             ;;
         esac
 
+    - name: Build Args
+      id: build_args
+      shell: bash
+      run: |
+        OPENSSL_ENV_FLAG=""
+        if [[ "${{ inputs.static_openssl }}" == "true" ]]; then
+          echo "OpenSSL static linking ENABLED"
+          OPENSSL_ENV_FLAG="-e OPENSSL_STATIC=yes"
+        else
+          echo "OpenSSL dynamic linking ENABLED"
+        fi
+
+        echo "openssl_env_flag=${OPENSSL_ENV_FLAG}" >> $GITHUB_OUTPUT
     - name: Build Docker Image
       shell: bash
       run: |
@@ -93,6 +109,7 @@ runs:
           -v "${{ github.workspace }}/conflux-rust:/workspace" \
           -w /workspace \
           -e "ARCH=${{ inputs.arch }}" \
+          ${{ steps.build_args.outputs.openssl_env_flag }} \
           "conflux-builder:${{ inputs.version_tag }}" \
           bash -c "cargo build --release --target ${{ steps.build_config.outputs.target }}"
 
@@ -110,17 +127,26 @@ runs:
         BUILD_PATH="${{ steps.build_config.outputs.build_path }}"
 
         PLATFORM="${TARGET}-glibc${{ inputs.glibc_version }}"
-        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}"
+
+        ARTIFACT_SUFFIX=""
+        if [[ "${{ inputs.static_openssl }}" == "true" ]]; then
+          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-static"
+        fi
+        if [[ "${{ inputs.compatibility_mode }}" == "true" ]]; then
+          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-compat"
+        fi
+
+        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}${ARTIFACT_SUFFIX}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
         ARTIFACT_DIR="${BUILD_PATH}/${ARTIFACT_NAME}"
-
+ 
         mkdir -p "${ARTIFACT_DIR}"
         mv "${BUILD_PATH}/conflux" "${ARTIFACT_DIR}/"
-
+ 
         # Create archive
         cd "$(dirname "${BUILD_PATH}")"
         tar -czvf "${ARCHIVE_NAME}" -C "$(basename "${BUILD_PATH}")" "${ARTIFACT_NAME}"
-
+ 
         # Output results
         echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
         echo "archive_path=conflux-rust/target/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT

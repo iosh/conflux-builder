@@ -58,7 +58,6 @@ ENV OPENSSL_DIR=/opt/openssl
 ENV OPENSSL_LIB_DIR=/opt/openssl/lib64
 ENV OPENSSL_INCLUDE_DIR=/opt/openssl/include
 ENV PKG_CONFIG_PATH=/opt/openssl/lib64/pkgconfig
-ENV OPENSSL_STATIC=yes
 
 WORKDIR /workspace
 

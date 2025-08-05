@@ -43,6 +43,12 @@ on:
           - openssl-3
           - openssl-1
         default: "openssl-3"
+      static_openssl:
+        description: "Statically link OpenSSL (for Linux builds)"
+        required: true
+        type: boolean
+        default: true
+
 jobs:
   setup:
     runs-on: ubuntu-24.04
@@ -97,6 +103,7 @@ jobs:
           arch: ${{ matrix.config.arch }}
           glibc_version: ${{ inputs.glibc_version }}
           openssl_version: ${{ inputs.openssl_version }}
+          static_openssl: ${{ inputs.static_openssl }}
 
       - name: Build for Windows
         if: matrix.config.os == 'windows'

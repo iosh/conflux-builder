@@ -90,7 +90,6 @@ ENV OPENSSL_DIR_aarch64_unknown_linux_gnu=/opt/openssl-aarch64
 ENV OPENSSL_LIB_DIR_aarch64_unknown_linux_gnu=/opt/openssl-aarch64/lib
 ENV OPENSSL_INCLUDE_DIR_aarch64_unknown_linux_gnu=/opt/openssl-aarch64/include
 ENV PKG_CONFIG_PATH_aarch64_unknown_linux_gnu=/opt/openssl-aarch64/lib/pkgconfig:/usr/lib/aarch64-linux-gnu/pkgconfig
-ENV OPENSSL_STATIC_aarch64_unknown_linux_gnu=yes
 
 
 
