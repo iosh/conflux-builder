@@ -121,7 +121,8 @@ runs:
           --build-arg OPENSSL_CHOICE="${{ inputs.openssl_version }}" \
           ${{ steps.build_args.outputs.docker_build_args }} \
           -t "conflux-builder:${{ inputs.version_tag }}" \
-          -f "docker/${{ inputs.arch }}.Dockerfile" .
+          -f "${{ github.workspace }}/builder/docker/${{ inputs.arch }}.Dockerfile"  \
+          "${{ github.workspace }}"
 
     - name: Build in Docker Container
       shell: bash
