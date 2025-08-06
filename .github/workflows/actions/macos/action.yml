@@ -29,36 +29,33 @@ runs:
 
     - name: Build Project
       shell: bash
+      working-directory: conflux-rust
       run: |
         echo "--- Building Conflux for macOS ---"
-        cd conflux-rust
         cargo build --release
 
     - name: Package macOS Artifact
       id: package
       shell: bash
+      working-directory: conflux-rust
       run: |
         echo "--- Packaging macOS Artifact ---"
-        cd conflux-rust
 
-        # Generate artifact names
         VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
         VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
 
         PLATFORM="apple-darwin"
         ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
-        ARTIFACT_DIR="target/release/${ARTIFACT_NAME}"
 
-        # Create artifact directory and move binary
-        mkdir -p "${ARTIFACT_DIR}"
-        mv "target/release/conflux" "${ARTIFACT_DIR}/"
+        PACKAGING_DIR="packaging_temp"
+        mkdir -p "${PACKAGING_DIR}"
 
-        # Create archive
-        cd target/release
-        tar -czvf "${ARCHIVE_NAME}" "${ARTIFACT_NAME}"
+        cp "target/release/conflux" "${PACKAGING_DIR}/conflux"
+        tar -czvf "${ARCHIVE_NAME}" -C "${PACKAGING_DIR}" conflux
 
-        # Output results
+        rm -rf "${PACKAGING_DIR}"
+
         echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "archive_path=conflux-rust/target/release/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "Created archive: ${ARCHIVE_NAME}"
+        echo "archive_path=conflux-rust/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+        echo "Created archive: ${ARCHIVE_NAME} at conflux-rust/${ARCHIVE_NAME}"

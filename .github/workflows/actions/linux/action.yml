@@ -139,9 +139,9 @@ runs:
     - name: Package Linux Artifact
       id: package
       shell: bash
+      working-directory: conflux-rust
       run: |
         echo "--- Packaging Linux Artifact ---"
-        cd conflux-rust
 
         VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
         VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
@@ -161,16 +161,16 @@ runs:
 
         ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}${ARTIFACT_SUFFIX}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
-        ARTIFACT_DIR="${BUILD_PATH}/${ARTIFACT_NAME}"
 
-        mkdir -p "${ARTIFACT_DIR}"
-        mv "${BUILD_PATH}/conflux" "${ARTIFACT_DIR}/"
 
-        # Create archive
-        cd "$(dirname "${BUILD_PATH}")"
-        tar -czvf "${ARCHIVE_NAME}" -C "$(basename "${BUILD_PATH}")" "${ARTIFACT_NAME}"
+        PACKAGING_DIR="packaging_temp"
+        mkdir -p "${PACKAGING_DIR}"
 
-        # Output results
+        cp "${BUILD_PATH}/conflux" "${PACKAGING_DIR}/conflux"
+        tar -czvf "${ARCHIVE_NAME}" -C "${PACKAGING_DIR}" conflux
+
+        rm -rf "${PACKAGING_DIR}"
+
         echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "archive_path=conflux-rust/target/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "Created archive: ${ARCHIVE_NAME}"
+        echo "archive_path=conflux-rust/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+        echo "Created archive: ${ARCHIVE_NAME} at conflux-rust/${ARCHIVE_NAME}"

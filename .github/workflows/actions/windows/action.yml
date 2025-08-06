@@ -28,37 +28,36 @@ runs:
 
     - name: Build Project
       shell: bash
+      working-directory: conflux-rust
       run: |
-        echo --- Building Conflux for Windows ---
-        cd conflux-rust
+        echo "--- Building Conflux for Windows ---"
         cargo build --release
 
     - name: Package Windows Artifact
       id: package
       shell: bash
+      working-directory: conflux-rust
       run: |
         echo "--- Packaging Windows Artifact ---"
-        cd conflux-rust
 
-        # Generate artifact names
         VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
         VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
 
         PLATFORM="pc-windows-msvc"
         ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.zip"
-        ARTIFACT_DIR="target/release/${ARTIFACT_NAME}"
 
-        # Create artifact directory and move binary
-        mkdir -p "${ARTIFACT_DIR}"
-        mv "target/release/conflux.exe" "${ARTIFACT_DIR}/"
+        PACKAGING_DIR="packaging_temp"
+        mkdir -p "${PACKAGING_DIR}"
 
-        # Create archive
-        cd target/release
-        powershell "Compress-Archive -Path '${ARTIFACT_NAME}' -DestinationPath '${ARCHIVE_NAME}'"
-        
+        cp "target/release/conflux.exe" "${PACKAGING_DIR}/conflux.exe"
 
-        # Output results
+        cd "${PACKAGING_DIR}"
+        7z a "../${ARCHIVE_NAME}" "conflux.exe"
+        cd ..
+
+        rm -rf "${PACKAGING_DIR}"
+
         echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "archive_path=conflux-rust/target/release/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "Created archive: ${ARCHIVE_NAME}"
+        echo "archive_path=conflux-rust/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+        echo "Created archive: ${ARCHIVE_NAME} at conflux-rust/${ARCHIVE_NAME}"
