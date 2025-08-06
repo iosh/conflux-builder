@@ -34,7 +34,7 @@ on:
           - "2.35"
           - "2.39"
         default: "2.39"
- 
+
       openssl_version:
         description: "OpenSSL version for Linux builds"
         required: false
@@ -48,6 +48,11 @@ on:
         required: true
         type: boolean
         default: true
+      compatibility_mode:
+        description: "Enable compatibility mode for older CPUs (disables native optimizations)"
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   setup:
@@ -104,6 +109,7 @@ jobs:
           glibc_version: ${{ inputs.glibc_version }}
           openssl_version: ${{ inputs.openssl_version }}
           static_openssl: ${{ inputs.static_openssl }}
+          compatibility_mode: ${{ inputs.compatibility_mode }}
 
       - name: Build for Windows
         if: matrix.config.os == 'windows'
