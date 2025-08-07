@@ -44,15 +44,23 @@ runs:
         VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
         VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
 
-        PLATFORM="apple-darwin"
+        PLATFORM="macos"
         ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
+
+        echo "Artifact base name: ${ARTIFACT_NAME}"
+        echo "Archive name: ${ARCHIVE_NAME}"
 
         PACKAGING_DIR="packaging_temp"
         mkdir -p "${PACKAGING_DIR}"
 
+        echo "Copying binary..." 
         cp "target/release/conflux" "${PACKAGING_DIR}/conflux"
-        tar -czvf "${ARCHIVE_NAME}" -C "${PACKAGING_DIR}" conflux
+        cp -r run/* "${PACKAGING_DIR}/"
+
+        echo "Creating archive..."
+        tar -czvf "${ARCHIVE_NAME}" -C "${PACKAGING_DIR}" .
+
 
         rm -rf "${PACKAGING_DIR}"
 

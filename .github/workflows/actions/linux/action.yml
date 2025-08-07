@@ -146,10 +146,7 @@ runs:
         VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
         VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
 
-        TARGET="${{ steps.build_config.outputs.target }}"
         BUILD_PATH="${{ steps.build_config.outputs.build_path }}"
-
-        PLATFORM="${TARGET}-glibc${{ inputs.glibc_version }}"
 
         ARTIFACT_SUFFIX=""
         if [[ "${{ inputs.static_openssl }}" == "true" ]]; then
@@ -159,15 +156,27 @@ runs:
           ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-portable"
         fi
 
-        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}${ARTIFACT_SUFFIX}"
+        PLATFORM_INFO="linux-glibc${{ inputs.glibc_version }}"
+        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM_INFO}${ARTIFACT_SUFFIX}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
 
+        echo "Artifact base name: ${ARTIFACT_NAME}"
+        echo "Archive name: ${ARCHIVE_NAME}"
 
         PACKAGING_DIR="packaging_temp"
         mkdir -p "${PACKAGING_DIR}"
-
+ 
+        echo "Copying binary..."
         cp "${BUILD_PATH}/conflux" "${PACKAGING_DIR}/conflux"
-        tar -czvf "${ARCHIVE_NAME}" -C "${PACKAGING_DIR}" conflux
+
+        echo "Copying configuration files from 'run' directory..."
+        cp -r run/* "${PACKAGING_DIR}/"
+ 
+        echo "Contents to be archived:"
+        ls -l "${PACKAGING_DIR}"
+        
+        echo "Creating archive..."
+        tar -czvf "${ARCHIVE_NAME}" -C "${PACKAGING_DIR}" .
 
         rm -rf "${PACKAGING_DIR}"
 

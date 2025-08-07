@@ -43,18 +43,25 @@ runs:
         VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
         VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
 
-        PLATFORM="pc-windows-msvc"
+        PLATFORM="windows"
         ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.zip"
+
+        echo "Artifact base name: ${ARTIFACT_NAME}"
+        echo "Archive name: ${ARCHIVE_NAME}"
+
 
         PACKAGING_DIR="packaging_temp"
         mkdir -p "${PACKAGING_DIR}"
 
         cp "target/release/conflux.exe" "${PACKAGING_DIR}/conflux.exe"
+        cp -r run/* "${PACKAGING_DIR}/"
 
+        echo "Creating archive..."
         cd "${PACKAGING_DIR}"
-        7z a "../${ARCHIVE_NAME}" "conflux.exe"
+        7z a "../${ARCHIVE_NAME}" *
         cd ..
+
 
         rm -rf "${PACKAGING_DIR}"
 
