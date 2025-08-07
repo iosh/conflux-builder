@@ -93,8 +93,8 @@ runs:
           
           DOCKER_BUILD_ARGS="--build-arg COMPATIBILITY_MODE=true"
 
-          CARGO_FEATURES_FLAG="--features \"rocksdb/portable\""
-          
+          CARGO_FEATURES_FLAG="--features \"rocksdb/portable\" --features \"blst-portable\""
+
         else
           echo "Compatibility mode DISABLED"
         fi
@@ -165,16 +165,16 @@ runs:
 
         PACKAGING_DIR="packaging_temp"
         mkdir -p "${PACKAGING_DIR}"
- 
+
         echo "Copying binary..."
         cp "${BUILD_PATH}/conflux" "${PACKAGING_DIR}/conflux"
 
         echo "Copying configuration files from 'run' directory..."
         cp -r run/* "${PACKAGING_DIR}/"
- 
+
         echo "Contents to be archived:"
         ls -l "${PACKAGING_DIR}"
-        
+
         echo "Creating archive..."
         tar -czvf "${ARCHIVE_NAME}" -C "${PACKAGING_DIR}" .
 
