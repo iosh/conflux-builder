@@ -20,6 +20,10 @@ outputs:
     description: "Path to the created archive"
     value: ${{ steps.package.outputs.archive_path }}
 
+  artifact_base_name:
+    description: "Base name of the artifact"
+    value: ${{ steps.package.outputs.artifact_base_name }}
+
 runs:
   using: "composite"
   steps:
@@ -64,7 +68,8 @@ runs:
 
 
         rm -rf "${PACKAGING_DIR}"
-
+        
+        echo "artifact_base_name=${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
         echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
         echo "archive_path=conflux-rust/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
         echo "Created archive: ${ARCHIVE_NAME} at conflux-rust/${ARCHIVE_NAME}"

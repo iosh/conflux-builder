@@ -133,16 +133,29 @@ jobs:
         run: |
           if [ "${{ matrix.config.os }}" == "linux" ]; then
             echo "archive_path=${{ steps.linux_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
+            echo "artifact_base_name=${{ steps.linux_build.outputs.artifact_base_name }}" >> $GITHUB_OUTPUT
           elif [ "${{ matrix.config.os }}" == "windows" ]; then
             echo "archive_path=${{ steps.windows_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
+            echo "artifact_base_name=${{ steps.windows_build.outputs.artifact_base_name }}" >> $GITHUB_OUTPUT
           elif [ "${{ matrix.config.os }}" == "macos" ]; then
             echo "archive_path=${{ steps.macos_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
+            echo "artifact_base_name=${{ steps.macos_build.outputs.artifact_base_name }}" >> $GITHUB_OUTPUT
           fi
       - name: Attest Build Provenance
         id: attest
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: ${{ steps.build_outputs.outputs.archive_path }}
+
+      - name: Rename Attestation
+        id: rename_attestation
+        shell: bash
+        run: |
+          NEW_ATTESTATION_NAME="${{ steps.build_outputs.outputs.artifact_base_name }}-attestation.json"
+          mv "${{ steps.attest.outputs.bundle-path }}" "${NEW_ATTESTATION_NAME}"
+
+          echo "new_bundle_path=${NEW_ATTESTATION_NAME}" >> $GITHUB_OUTPUT
+          echo "Renamed attestation to: ${NEW_ATTESTATION_NAME}"
 
       - name: Get Short Commit Hash
         id: get_hash
@@ -162,5 +175,5 @@ jobs:
             - Built on: ${{ github.run_id }}
           files: |
             ${{ steps.build_outputs.outputs.archive_path }}
-            ${{ steps.attest.outputs.bundle-path }}
+            ${{ steps.rename_attestation.outputs.new_bundle_path }}
           append_body: true
