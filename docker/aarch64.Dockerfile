@@ -9,21 +9,21 @@ ARG COMPATIBILITY_MODE=false
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN dpkg --add-architecture arm64 && \
-    rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.sources && \
-    tee /etc/apt/sources.list.d/amd64.list > /dev/null <<EOF
+    rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.sources
+
+RUN tee /etc/apt/sources.list.d/amd64.list > /dev/null <<EOF
 deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME} main restricted universe multiverse
 deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME}-updates main restricted universe multiverse
 deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME}-backports main restricted universe multiverse
 deb [arch=amd64] http://security.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME}-security main restricted universe multiverse
-EOF && \
-    tee /etc/apt/sources.list.d/arm64.list > /dev/null <<EOF
+EOF
+
+RUN tee /etc/apt/sources.list.d/arm64.list > /dev/null <<EOF
 deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ ${UBUNTU_CODENAME} main restricted universe multiverse
 deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ ${UBUNTU_CODENAME}-updates main restricted universe multiverse
 deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ ${UBUNTU_CODENAME}-backports main restricted universe multiverse
 deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ ${UBUNTU_CODENAME}-security main restricted universe multiverse
 EOF
-
-
 
 RUN apt-get update && \
     apt-get install -y curl wget software-properties-common gnupg ca-certificates pkg-config cmake perl  && \
