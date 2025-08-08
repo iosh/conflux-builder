@@ -31,12 +31,31 @@ runs:
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
 
+    - name: Set Build Configuration
+      id: build_config
+      shell: bash
+      run: |
+        case "${{ inputs.arch }}" in
+          "aarch64")
+            echo "target=aarch64-apple-darwin" >> $GITHUB_OUTPUT
+            echo "build_path=target/aarch64-apple-darwin/release" >> $GITHUB_OUTPUT
+            ;;
+          "x86_64")
+            echo "target=x86_64-apple-darwin" >> $GITHUB_OUTPUT
+            echo "build_path=target/x86_64-apple-darwin/release" >> $GITHUB_OUTPUT
+            ;;
+          *)
+            echo "Error: Unsupported architecture: ${{ inputs.arch }}"
+            exit 1
+            ;;
+        esac
+
     - name: Build Project
       shell: bash
       working-directory: conflux-rust
       run: |
         echo "--- Building Conflux for macOS ---"
-        cargo build --release
+        cargo build --release --target ${{ steps.build_config.outputs.target }}
 
     - name: Package macOS Artifact
       id: package
@@ -48,6 +67,8 @@ runs:
         VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
         VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
 
+        BUILD_PATH="${{ steps.build_config.outputs.build_path }}"
+ 
         ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-macos-${{ inputs.arch }}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
 
@@ -58,7 +79,7 @@ runs:
         mkdir -p "${PACKAGING_DIR}"
 
         echo "Copying binary..." 
-        cp "target/release/conflux" "${PACKAGING_DIR}/conflux"
+        cp "${BUILD_PATH}/conflux" "${PACKAGING_DIR}/conflux"
         cp -r run/* "${PACKAGING_DIR}/"
 
         echo "Creating archive..."
