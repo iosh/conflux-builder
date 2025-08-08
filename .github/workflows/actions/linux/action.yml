@@ -88,7 +88,7 @@ runs:
       shell: bash
       run: |
         OPENSSL_ENV_FLAG=""
-        CARGO_FEATURES_FLAG=""
+        CARGO_FEATURES_FLAG="--features \"rocksdb/portable\""
         DOCKER_BUILD_ARGS=""
 
 

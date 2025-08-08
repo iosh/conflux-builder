@@ -41,8 +41,8 @@ RUN set -ex;\
     cd "openssl-${OPENSSL_VERSION}"; \
     CONFIG_FLAGS="--prefix=/opt/openssl --openssldir=/opt/openssl no-tests"; \
     if [ "${COMPATIBILITY_MODE}" = "true" ]; then \
-        echo "OpenSSL: Compiling in compatibility mode (-march=x86-64 -mtune=generic)"; \
-        CONFIG_FLAGS="${CONFIG_FLAGS} -march=x86-64 -mtune=generic"; \
+        echo "OpenSSL: Compiling in compatibility mode (-march=x86-64-v3 -mtune=generic)"; \
+        CONFIG_FLAGS="${CONFIG_FLAGS} -march=x86-64-v3 -mtune=generic"; \
     else \
         echo "OpenSSL: Compiling in normal mode"; \
     fi; \
@@ -62,7 +62,7 @@ ENV CC=clang-18
 ENV CXX=clang++-18
 ENV CXXFLAGS="-std=c++11 -stdlib=libc++"
 ENV LDFLAGS="-stdlib=libc++"
-
+ENV RUSTFLAGS="-C target-cpu=x86-64-v3"
 ENV OPENSSL_DIR=/opt/openssl
 ENV OPENSSL_LIB_DIR=/opt/openssl/lib64
 ENV OPENSSL_INCLUDE_DIR=/opt/openssl/include
