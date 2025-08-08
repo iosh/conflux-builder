@@ -167,12 +167,15 @@ jobs:
           tag_name: ${{ inputs.version_tag }}-${{ steps.get_hash.outputs.short_hash }}
           name: Release ${{ inputs.version_tag }} (commit ${{ steps.get_hash.outputs.short_hash }})
           body: |
-            Build artifacts for Conflux ${{ inputs.version_tag }}
+            ---
+            ### Build for `${{ matrix.config.os }}-${{ matrix.config.arch }}`
 
             **Build Details:**
-            - Commit: ${{ inputs.commit_hash }}
-            - Platform: ${{ matrix.config.os }}-${{ matrix.config.arch }}
-            - Built on: ${{ github.run_id }}
+            - **Commit:** `${{ inputs.commit_hash }}`
+            - **Version:** `${{ inputs.version_tag }}`
+            - **Platform:** `${{ matrix.config.os }}-${{ matrix.config.arch }}`
+            - **Workflow Run:** [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
           files: |
             ${{ steps.build_outputs.outputs.archive_path }}
             ${{ steps.rename_attestation.outputs.new_bundle_path }}
