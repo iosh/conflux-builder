@@ -76,12 +76,11 @@ RUN set -ex;\
 
 
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain none -y
-
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile default --default-toolchain stable -y
+ 
 ENV PATH="/root/.cargo/bin:${PATH}"
-
-RUN rustup default stable-x86_64-unknown-linux-gnu && \
-    rustup target add aarch64-unknown-linux-gnu
+ 
+RUN rustup target add aarch64-unknown-linux-gnu
 
 ENV CC_aarch64_unknown_linux_gnu="clang-18"
 ENV CXX_aarch64_unknown_linux_gnu="clang++-18"
