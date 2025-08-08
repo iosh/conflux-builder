@@ -47,8 +47,7 @@ runs:
         VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
         VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
 
-        PLATFORM="windows"
-        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM}"
+        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-windows-${{ inputs.arch }}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.zip"
 
         echo "Artifact base name: ${ARTIFACT_NAME}"
