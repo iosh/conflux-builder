@@ -27,8 +27,12 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
+    - name: Install Rust toolchain
+      shell: bash
+      run: |
+        rustup update --no-self-update stable
+        rustup component add --toolchain stable rustfmt rust-src
+        rustup default stable
 
     - name: Build Project
       shell: bash
