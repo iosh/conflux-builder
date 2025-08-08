@@ -162,7 +162,7 @@ jobs:
         run: echo "short_hash=$(echo ${{ inputs.commit_hash }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
       - name: Create or Update Release and Upload Assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
         with:
           tag_name: ${{ inputs.version_tag }}-${{ steps.get_hash.outputs.short_hash }}
           name: Release ${{ inputs.version_tag }} (commit ${{ steps.get_hash.outputs.short_hash }})
