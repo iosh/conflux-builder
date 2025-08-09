@@ -26,7 +26,7 @@ deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ ${UBUNTU_CODENAME}-securi
 EOF
 
 RUN apt-get update && \
-    apt-get install -y curl wget software-properties-common gnupg ca-certificates pkg-config cmake perl  && \
+    apt-get install -y curl wget software-properties-common gnupg ca-certificates pkg-config cmake perl git  && \
     wget https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
     ./llvm.sh 18 && \
@@ -75,12 +75,10 @@ RUN set -ex;\
 
 
 
-
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile default --default-toolchain stable -y
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain none -y
  
 ENV PATH="/root/.cargo/bin:${PATH}"
  
-RUN rustup target add aarch64-unknown-linux-gnu
 
 ENV CC_aarch64_unknown_linux_gnu="clang-18"
 ENV CXX_aarch64_unknown_linux_gnu="clang++-18"
@@ -104,3 +102,4 @@ ENV PKG_CONFIG_PATH_aarch64_unknown_linux_gnu=/opt/openssl-aarch64/lib/pkgconfig
 
 
 WORKDIR /workspace
+RUN git config --global --add safe.directory /workspace

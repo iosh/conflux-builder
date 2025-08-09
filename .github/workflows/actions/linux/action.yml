@@ -72,17 +72,21 @@ runs:
           "aarch64")
             echo "target=aarch64-unknown-linux-gnu" >> $GITHUB_OUTPUT
             echo "build_path=target/aarch64-unknown-linux-gnu/release" >> $GITHUB_OUTPUT
+
+            echo "toolchain_setup_cmd=rustup show && rustup target add aarch64-unknown-linux-gnu" >> $GITHUB_OUTPUT
+            ;;
             ;;
           "x86_64")
             echo "target=x86_64-unknown-linux-gnu" >> $GITHUB_OUTPUT
             echo "build_path=target/x86_64-unknown-linux-gnu/release" >> $GITHUB_OUTPUT
+
+            echo "toolchain_setup_cmd=rustup show" >> $GITHUB_OUTPUT
             ;;
           *)
             echo "Error: Unsupported architecture: ${{ inputs.arch }}"
             exit 1
             ;;
         esac
-
     - name: Build Args
       id: build_args
       shell: bash
@@ -132,14 +136,16 @@ runs:
       shell: bash
       run: |
         echo "--- Running Build in Docker Container ---"
+        
+        FULL_COMMAND="${{ steps.build_config.outputs.toolchain_setup_cmd }} && cargo build --release --target ${{ steps.build_config.outputs.target }} ${{ steps.build_args.outputs.cargo_features_flag }}"
+        
         docker run --rm \
           -v "${{ github.workspace }}/conflux-rust:/workspace" \
           -w /workspace \
           -e "ARCH=${{ inputs.arch }}" \
           ${{ steps.build_args.outputs.openssl_env_flag }} \
           "conflux-builder:${{ inputs.version_tag }}" \
-          bash -c "cargo build --release --target ${{ steps.build_config.outputs.target }} ${{ steps.build_args.outputs.cargo_features_flag }}"
-
+          bash -c "${FULL_COMMAND}"
     - name: Package Linux Artifact
       id: package
       shell: bash
