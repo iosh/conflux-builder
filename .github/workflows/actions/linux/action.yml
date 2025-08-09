@@ -75,7 +75,6 @@ runs:
 
             echo "toolchain_setup_cmd=rustup show && rustup target add aarch64-unknown-linux-gnu" >> $GITHUB_OUTPUT
             ;;
-            ;;
           "x86_64")
             echo "target=x86_64-unknown-linux-gnu" >> $GITHUB_OUTPUT
             echo "build_path=target/x86_64-unknown-linux-gnu/release" >> $GITHUB_OUTPUT
@@ -136,7 +135,7 @@ runs:
       shell: bash
       run: |
         echo "--- Running Build in Docker Container ---"
-        
+
         FULL_COMMAND="${{ steps.build_config.outputs.toolchain_setup_cmd }} && cargo build --release --target ${{ steps.build_config.outputs.target }} ${{ steps.build_args.outputs.cargo_features_flag }}"
         
         docker run --rm \
