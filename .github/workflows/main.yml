@@ -3,8 +3,8 @@ name: Conflux Builder
 on:
   workflow_dispatch:
     inputs:
-      commit_hash:
-        description: "The commit hash of conflux-rust to build"
+      commit_sha:
+        description: "The commit sha of conflux-rust to build"
         required: true
       version_tag:
         description: "The version tag for the release (e.g., v3.0.0)"
@@ -95,7 +95,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: "Conflux-Chain/conflux-rust"
-          ref: ${{ inputs.commit_hash }}
+          ref: ${{ inputs.commit_sha }}
           path: conflux-rust
 
       - name: Build for Linux
@@ -103,7 +103,7 @@ jobs:
         id: linux_build
         uses: ./builder/.github/workflows/actions/linux
         with:
-          commit_hash: ${{ inputs.commit_hash }}
+          commit_sha: ${{ inputs.commit_sha }}
           version_tag: ${{ inputs.version_tag }}
           arch: ${{ matrix.config.arch }}
           glibc_version: ${{ inputs.glibc_version }}
@@ -116,7 +116,7 @@ jobs:
         id: windows_build
         uses: ./builder/.github/workflows/actions/windows
         with:
-          commit_hash: ${{ inputs.commit_hash }}
+          commit_sha: ${{ inputs.commit_sha }}
           version_tag: ${{ inputs.version_tag }}
           arch: ${{ matrix.config.arch }}
 
@@ -125,7 +125,7 @@ jobs:
         id: macos_build
         uses: ./builder/.github/workflows/actions/macos
         with:
-          commit_hash: ${{ inputs.commit_hash }}
+          commit_sha: ${{ inputs.commit_sha }}
           version_tag: ${{ inputs.version_tag }}
           arch: ${{ matrix.config.arch }}
       - name: Get Build Outputs
@@ -159,7 +159,7 @@ jobs:
 
       - name: Get Short Commit Hash
         id: get_hash
-        run: echo "short_hash=$(echo ${{ inputs.commit_hash }} | cut -c1-7)" >> $GITHUB_OUTPUT
+        run: echo "short_hash=$(echo ${{ inputs.commit_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
       - name: Create or Update Release and Upload Assets
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
@@ -171,7 +171,7 @@ jobs:
             ### Build for `${{ matrix.config.os }}-${{ matrix.config.arch }}`
 
             **Build Details:**
-            - **Commit:** `${{ inputs.commit_hash }}`
+            - **Commit:** `${{ inputs.commit_sha }}`
             - **Version:** `${{ inputs.version_tag }}`
             - **Platform:** `${{ matrix.config.os }}-${{ matrix.config.arch }}`
             - **Workflow Run:** [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})

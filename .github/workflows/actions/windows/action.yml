@@ -2,7 +2,7 @@ name: "Windows Build Action"
 description: "Build Conflux for Windows platform"
 
 inputs:
-  commit_hash:
+  commit_sha:
     description: "The commit hash of conflux-rust to build"
     required: true
   version_tag:
