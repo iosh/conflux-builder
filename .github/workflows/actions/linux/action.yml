@@ -159,7 +159,7 @@ runs:
 
         ARTIFACT_SUFFIX=""
         if [[ "${{ inputs.static_openssl }}" == "true" ]]; then
-          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-static-openssl"
+          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-static-openssl-${{ inputs.openssl_version }}"
         fi
         if [[ "${{ inputs.compatibility_mode }}" == "true" ]]; then
           ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-portable"
