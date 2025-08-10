@@ -137,7 +137,7 @@ runs:
         echo "--- Running Build in Docker Container ---"
 
         FULL_COMMAND="${{ steps.build_config.outputs.toolchain_setup_cmd }} && cargo build --release --target ${{ steps.build_config.outputs.target }} ${{ steps.build_args.outputs.cargo_features_flag }}"
-        
+
         docker run --rm \
           -v "${{ github.workspace }}/conflux-rust:/workspace" \
           -w /workspace \
@@ -166,7 +166,7 @@ runs:
         fi
 
         PLATFORM_INFO="glibc${{ inputs.glibc_version }}"
-        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-${{ inputs.arch }}-${PLATFORM_INFO}${ARTIFACT_SUFFIX}"
+        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-linux-${{ inputs.arch }}-${PLATFORM_INFO}${ARTIFACT_SUFFIX}"
         ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
 
         echo "Artifact base name: ${ARTIFACT_NAME}"
