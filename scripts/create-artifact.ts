@@ -95,7 +95,6 @@ async function main() {
   core.info(`Archive name: ${archiveName}`);
   core.info(`Archive path: ${archivePath}`);
 
-  // 2. Create Archive
   const packagingDir = "packaging_temp";
   await fs.ensureDir(packagingDir);
 
@@ -106,7 +105,6 @@ async function main() {
   );
   await fs.copy(argv.sourceDir, packagingDir);
 
-  // 3. Archive the files
   const output = fs.createWriteStream(archivePath);
   const archive = archiver(platform === "windows" ? "zip" : "tar", {
     gzip: platform !== "windows",
@@ -121,11 +119,9 @@ async function main() {
 
   core.info(`Successfully created archive: ${archivePath}`);
 
-  // 4. Set outputs for GitHub Actions
   core.setOutput("artifact_base_name", artifactBaseName);
   core.setOutput("archive_name", archiveName);
-  core.setOutput("archive_path_full", archivePath);
-  core.setOutput("archive_path_relative", archiveName);
+  core.setOutput("archive_path", archivePath);
 }
 
 main().catch((error) => {

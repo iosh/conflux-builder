@@ -167,6 +167,6 @@ jobs:
 
           prerelease: ${{ contains(inputs.version_tag, 'testnet') }}
           files: |
-            ${{ steps.package.outputs.archive_path_relative }}
+            ${{ steps.package.outputs.archive_path }}
             ${{ steps.rename_attestation.outputs.attestation }}
           append_body: true
