@@ -1,0 +1,28 @@
+name: Build Conflux (Windows)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "The commit sha of conflux-rust to build"
+        required: true
+      version_tag:
+        description: "The version tag for the release (e.g., v3.0.0)"
+        required: true
+      arch:
+        description: "CPU Architecture"
+        required: true
+        type: choice
+        options:
+          - x86_64
+        default: x86_64
+
+jobs:
+  call-reusable-build:
+    uses: ./.github/workflows/_reusable-build-and-release.yml
+    with:
+      os: windows
+      arch: ${{ inputs.arch }}
+      runner: windows-2022
+      commit_sha: ${{ inputs.commit_sha }}
+      version_tag: ${{ inputs.version_tag }}

@@ -1,0 +1,28 @@
+name: Build Conflux (macOS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "The commit sha of conflux-rust to build"
+        required: true
+      version_tag:
+        description: "The version tag for the release (e.g., v3.0.0)"
+        required: true
+      arch:
+        description: "CPU Architecture"
+        required: true
+        type: choice
+        options:
+          - x86_64
+          - aarch64
+
+jobs:
+  call-reusable-build:
+    uses: ./.github/workflows/_reusable-build-and-release.yml
+    with:
+      os: macos
+      arch: ${{ inputs.arch }}
+      runner: ${{ inputs.arch == 'aarch64' && 'macos-14' || 'macos-13' }}
+      commit_sha: ${{ inputs.commit_sha }}
+      version_tag: ${{ inputs.version_tag }}

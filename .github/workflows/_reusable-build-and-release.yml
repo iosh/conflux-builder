@@ -1,86 +1,43 @@
-name: Conflux Builder
+name: _Reusable Build and Release
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      commit_sha:
-        description: "The commit sha of conflux-rust to build"
-        required: true
-      version_tag:
-        description: "The version tag for the release (e.g., v3.0.0)"
-        required: true
       os:
-        description: "Operating System"
         required: true
-        type: choice
-        options:
-          - linux
-          - windows
-          - macos
+        type: string
       arch:
-        description: "CPU Architecture"
         required: true
-        type: choice
-        options:
-          - x86_64
-          - aarch64
+        type: string
+      runner:
+        required: true
+        type: string
+      commit_sha:
+        required: true
+        type: string
+      version_tag:
+        required: true
+        type: string
       glibc_version:
-        description: "Glibc version for Linux builds (e.g., 2.31)"
         required: false
-        type: choice
-        options:
-          - "2.27"
-          - "2.31"
-          - "2.35"
-          - "2.39"
+        type: string
         default: "2.39"
-
       openssl_version:
-        description: "OpenSSL version for Linux builds"
         required: false
-        type: choice
-        options:
-          - openssl-3
-          - openssl-1
+        type: string
         default: "openssl-3"
       static_openssl:
-        description: "Statically link OpenSSL (for Linux builds)"
-        required: true
+        required: false
         type: boolean
         default: true
       compatibility_mode:
-        description: "Enable compatibility mode for older CPUs (disables native optimizations)"
-        required: true
+        required: false
         type: boolean
         default: false
 
 jobs:
-  setup:
-    runs-on: ubuntu-24.04
-    outputs:
-      config: ${{ steps.generate_config.outputs.config }}
-    steps:
-      - name: Generate Build Config
-        id: generate_config
-        run: |
-          ALL_CONFIGS='[
-            {"os": "linux",   "arch": "x86_64",  "runs-on": "ubuntu-24.04"},
-            {"os": "linux",   "arch": "aarch64", "runs-on": "ubuntu-24.04"},
-            {"os": "macos",   "arch": "x86_64",  "runs-on": "macos-13"},
-            {"os": "macos",   "arch": "aarch64", "runs-on": "macos-14"},
-            {"os": "windows", "arch": "x86_64",  "runs-on": "windows-2022"}
-          ]'
-          MATCHING_CONFIG="[$(echo "$ALL_CONFIGS" | jq -c ".[] | select(.os == \"${{ inputs.os }}\" and .arch == \"${{ inputs.arch }}\")")]"
-          echo "config=$MATCHING_CONFIG" >> $GITHUB_OUTPUT
-
   build-and-release:
-    needs: setup
-    if: ${{ needs.setup.outputs.config != '[]' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        config: ${{ fromJson(needs.setup.outputs.config) }}
-    runs-on: ${{ matrix.config.runs-on }}
+    runs-on: ${{ inputs.runner }}
     permissions:
       contents: write
       id-token: write
@@ -99,45 +56,46 @@ jobs:
           path: conflux-rust
 
       - name: Build for Linux
-        if: matrix.config.os == 'linux'
+        if: inputs.os == 'linux'
         id: linux_build
         uses: ./builder/.github/workflows/actions/linux
         with:
           commit_sha: ${{ inputs.commit_sha }}
           version_tag: ${{ inputs.version_tag }}
-          arch: ${{ matrix.config.arch }}
+          arch: ${{ inputs.arch }}
           glibc_version: ${{ inputs.glibc_version }}
           openssl_version: ${{ inputs.openssl_version }}
           static_openssl: ${{ inputs.static_openssl }}
           compatibility_mode: ${{ inputs.compatibility_mode }}
 
       - name: Build for Windows
-        if: matrix.config.os == 'windows'
+        if: inputs.os == 'windows'
         id: windows_build
         uses: ./builder/.github/workflows/actions/windows
         with:
           commit_sha: ${{ inputs.commit_sha }}
           version_tag: ${{ inputs.version_tag }}
-          arch: ${{ matrix.config.arch }}
+          arch: ${{ inputs.arch }}
 
       - name: Build for macOS
-        if: matrix.config.os == 'macos'
+        if: inputs.os == 'macos'
         id: macos_build
         uses: ./builder/.github/workflows/actions/macos
         with:
           commit_sha: ${{ inputs.commit_sha }}
           version_tag: ${{ inputs.version_tag }}
-          arch: ${{ matrix.config.arch }}
+          arch: ${{ inputs.arch }}
+
       - name: Get Build Outputs
         id: build_outputs
         run: |
-          if [ "${{ matrix.config.os }}" == "linux" ]; then
+          if [ "${{ inputs.os }}" == "linux" ]; then
             echo "archive_path=${{ steps.linux_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
             echo "artifact_base_name=${{ steps.linux_build.outputs.artifact_base_name }}" >> $GITHUB_OUTPUT
-          elif [ "${{ matrix.config.os }}" == "windows" ]; then
+          elif [ "${{ inputs.os }}" == "windows" ]; then
             echo "archive_path=${{ steps.windows_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
             echo "artifact_base_name=${{ steps.windows_build.outputs.artifact_base_name }}" >> $GITHUB_OUTPUT
-          elif [ "${{ matrix.config.os }}" == "macos" ]; then
+          elif [ "${{ inputs.os }}" == "macos" ]; then
             echo "archive_path=${{ steps.macos_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
             echo "artifact_base_name=${{ steps.macos_build.outputs.artifact_base_name }}" >> $GITHUB_OUTPUT
           fi
@@ -168,12 +126,12 @@ jobs:
           name: Release ${{ inputs.version_tag }} (commit ${{ steps.get_hash.outputs.short_hash }})
           body: |
             ---
-            ### Build for `${{ matrix.config.os }}-${{ matrix.config.arch }}`
+            ### Build for `${{ inputs.os }}-${{ inputs.arch }}`
 
             **Build Details:**
             - **Commit:** `${{ inputs.commit_sha }}`
             - **Version:** `${{ inputs.version_tag }}`
-            - **Platform:** `${{ matrix.config.os }}-${{ matrix.config.arch }}`
+            - **Platform:** `${{ inputs.os }}-${{ inputs.arch }}`
             - **Workflow Run:** [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
           files: |

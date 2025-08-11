@@ -1,0 +1,60 @@
+name: Build Conflux (Linux)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: "The commit sha of conflux-rust to build"
+        required: true
+      version_tag:
+        description: "The version tag for the release (e.g., v3.0.0)"
+        required: true
+      arch:
+        description: "CPU Architecture"
+        required: true
+        type: choice
+        options:
+          - x86_64
+          - aarch64
+      glibc_version:
+        description: "Glibc version for Linux builds (e.g., 2.31)"
+        required: false
+        type: choice
+        options:
+          - "2.27"
+          - "2.31"
+          - "2.35"
+          - "2.39"
+        default: "2.39"
+      openssl_version:
+        description: "OpenSSL version for Linux builds"
+        required: false
+        type: choice
+        options:
+          - openssl-3
+          - openssl-1
+        default: "openssl-3"
+      static_openssl:
+        description: "Statically link OpenSSL (for Linux builds)"
+        required: true
+        type: boolean
+        default: true
+      compatibility_mode:
+        description: "Enable compatibility mode for older CPUs (disables native optimizations)"
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  call-reusable-build:
+    uses: ./.github/workflows/_reusable-build-and-release.yml
+    with:
+      os: linux
+      arch: ${{ inputs.arch }}
+      runner: ubuntu-24.04
+      commit_sha: ${{ inputs.commit_sha }}
+      version_tag: ${{ inputs.version_tag }}
+      glibc_version: ${{ inputs.glibc_version }}
+      openssl_version: ${{ inputs.openssl_version }}
+      static_openssl: ${{ inputs.static_openssl }}
+      compatibility_mode: ${{ inputs.compatibility_mode }}
