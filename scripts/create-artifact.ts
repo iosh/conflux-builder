@@ -124,7 +124,8 @@ async function main() {
   // 4. Set outputs for GitHub Actions
   core.setOutput("artifact_base_name", artifactBaseName);
   core.setOutput("archive_name", archiveName);
-  core.setOutput("archive_path", archivePath);
+  core.setOutput("archive_path_full", archivePath);
+  core.setOutput("archive_path_relative", archiveName);
 }
 
 main().catch((error) => {

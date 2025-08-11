@@ -134,7 +134,7 @@ jobs:
         id: attest
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: ${{ steps.package.outputs.archive_path }}
+          subject-path: ${{ steps.package.outputs.archive_path_full }}
 
       - name: Rename Attestation
         id: rename_attestation
@@ -167,6 +167,6 @@ jobs:
 
           prerelease: ${{ contains(inputs.version_tag, 'testnet') }}
           files: |
-            ${{ steps.package.outputs.archive_path }}
+            ${{ steps.package.outputs.archive_path_relative }}
             ${{ steps.rename_attestation.outputs.attestation }}
           append_body: true
