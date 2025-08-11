@@ -165,6 +165,7 @@ jobs:
             - **Platform:** `${{ inputs.os }}-${{ inputs.arch }}`
             - **Workflow Run:** [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
+          prerelease: ${{ contains(inputs.version_tag, 'testnet') }}
           files: |
             ${{ steps.package.outputs.archive_path }}
             ${{ steps.rename_attestation.outputs.attestation }}
