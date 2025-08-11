@@ -60,38 +60,8 @@ runs:
         echo "--- Building Conflux for macOS ---"
         cargo build --release --target ${{ steps.build_config.outputs.target }}
 
-    - name: Package macOS Artifact
+    - name: Set build path output
       id: package
       shell: bash
-      working-directory: conflux-rust
       run: |
-        echo "--- Packaging macOS Artifact ---"
-
-        VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
-        VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
-
-        BUILD_PATH="${{ steps.build_config.outputs.build_path }}"
-
-        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-macos-${{ inputs.arch }}"
-        ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
-
-        echo "Artifact base name: ${ARTIFACT_NAME}"
-        echo "Archive name: ${ARCHIVE_NAME}"
-
-        PACKAGING_DIR="packaging_temp"
-        mkdir -p "${PACKAGING_DIR}"
-
-        echo "Copying binary..." 
-        cp "${BUILD_PATH}/conflux" "${PACKAGING_DIR}/conflux"
-        cp -r run/* "${PACKAGING_DIR}/"
-
-        echo "Creating archive..."
-        tar -czvf "${ARCHIVE_NAME}" -C "${PACKAGING_DIR}" .
-
-
-        rm -rf "${PACKAGING_DIR}"
-
-        echo "artifact_base_name=${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
-        echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "archive_path=conflux-rust/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "Created archive: ${ARCHIVE_NAME} at conflux-rust/${ARCHIVE_NAME}"
+        echo "build_path=${{ steps.build_config.outputs.build_path }}" >> $GITHUB_OUTPUT

@@ -145,51 +145,8 @@ runs:
           ${{ steps.build_args.outputs.openssl_env_flag }} \
           "conflux-builder:${{ inputs.version_tag }}" \
           bash -c "${FULL_COMMAND}"
-    - name: Package Linux Artifact
+    - name: Set build path output
       id: package
       shell: bash
-      working-directory: conflux-rust
       run: |
-        echo "--- Packaging Linux Artifact ---"
-
-        VERSION_TAG_CLEANED="${{ inputs.version_tag }}"
-        VERSION_TAG_CLEANED="${VERSION_TAG_CLEANED#v}"
-
-        BUILD_PATH="${{ steps.build_config.outputs.build_path }}"
-
-        ARTIFACT_SUFFIX=""
-        if [[ "${{ inputs.static_openssl }}" == "true" ]]; then
-          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-static-openssl-${{ inputs.openssl_version }}"
-        fi
-        if [[ "${{ inputs.compatibility_mode }}" == "true" ]]; then
-          ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX}-portable"
-        fi
-
-        PLATFORM_INFO="glibc${{ inputs.glibc_version }}"
-        ARTIFACT_NAME="conflux-v${VERSION_TAG_CLEANED}-linux-${{ inputs.arch }}-${PLATFORM_INFO}${ARTIFACT_SUFFIX}"
-        ARCHIVE_NAME="${ARTIFACT_NAME}.tar.gz"
-
-        echo "Artifact base name: ${ARTIFACT_NAME}"
-        echo "Archive name: ${ARCHIVE_NAME}"
-
-        PACKAGING_DIR="packaging_temp"
-        mkdir -p "${PACKAGING_DIR}"
-
-        echo "Copying binary..."
-        cp "${BUILD_PATH}/conflux" "${PACKAGING_DIR}/conflux"
-
-        echo "Copying configuration files from 'run' directory..."
-        cp -r run/* "${PACKAGING_DIR}/"
-
-        echo "Contents to be archived:"
-        ls -l "${PACKAGING_DIR}"
-
-        echo "Creating archive..."
-        tar -czvf "${ARCHIVE_NAME}" -C "${PACKAGING_DIR}" .
-
-        rm -rf "${PACKAGING_DIR}"
-
-        echo "artifact_base_name=${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
-        echo "archive_name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "archive_path=conflux-rust/${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-        echo "Created archive: ${ARCHIVE_NAME} at conflux-rust/${ARCHIVE_NAME}"
+        echo "build_path=${{ steps.build_config.outputs.build_path }}" >> $GITHUB_OUTPUT

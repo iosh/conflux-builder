@@ -86,33 +86,64 @@ jobs:
           version_tag: ${{ inputs.version_tag }}
           arch: ${{ inputs.arch }}
 
-      - name: Get Build Outputs
-        id: build_outputs
+      - name: Get Build Path
+        id: get_build_path
+        shell: bash
         run: |
           if [ "${{ inputs.os }}" == "linux" ]; then
-            echo "archive_path=${{ steps.linux_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
-            echo "artifact_base_name=${{ steps.linux_build.outputs.artifact_base_name }}" >> $GITHUB_OUTPUT
+            echo "build_path=${{ steps.linux_build.outputs.build_path }}" >> $GITHUB_OUTPUT
           elif [ "${{ inputs.os }}" == "windows" ]; then
-            echo "archive_path=${{ steps.windows_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
-            echo "artifact_base_name=${{ steps.windows_build.outputs.artifact_base_name }}" >> $GITHUB_OUTPUT
+            echo "build_path=${{ steps.windows_build.outputs.build_path }}" >> $GITHUB_OUTPUT
           elif [ "${{ inputs.os }}" == "macos" ]; then
-            echo "archive_path=${{ steps.macos_build.outputs.archive_path }}" >> $GITHUB_OUTPUT
-            echo "artifact_base_name=${{ steps.macos_build.outputs.artifact_base_name }}" >> $GITHUB_OUTPUT
+            echo "build_path=${{ steps.macos_build.outputs.build_path }}" >> $GITHUB_OUTPUT
           fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: builder/scripts/package-lock.json
+
+      - name: Install Dependencies
+        shell: bash
+        working-directory: builder/scripts
+        run: npm install
+
+      - name: Compile TypeScript
+        shell: bash
+        working-directory: builder/scripts
+        run: npm run build
+
+      - name: Package Artifact
+        id: package
+        shell: bash
+        run: |
+          node builder/scripts/dist/create-artifact.js \
+            --os ${{ inputs.os }} \
+            --arch "${{ inputs.arch }}" \
+            --version-tag "${{ inputs.version_tag }}" \
+            --build-path "conflux-rust/${{ steps.get_build_path.outputs.build_path }}" \
+            --source-dir "conflux-rust/run" \
+            --output-dir "conflux-rust" \
+            --glibc-version "${{ inputs.glibc_version }}" \
+            --openssl-version "${{ inputs.openssl_version }}" \
+            --static-openssl "${{ inputs.static_openssl }}" \
+            --compatibility-mode "${{ inputs.compatibility_mode }}"
       - name: Attest Build Provenance
         id: attest
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: ${{ steps.build_outputs.outputs.archive_path }}
+          subject-path: ${{ steps.package.outputs.archive_path }}
 
       - name: Rename Attestation
         id: rename_attestation
         shell: bash
         run: |
-          NEW_ATTESTATION_NAME="${{ steps.build_outputs.outputs.artifact_base_name }}-attestation.json"
+          NEW_ATTESTATION_NAME="${{ steps.package.outputs.artifact_base_name }}-attestation.json"
           mv "${{ steps.attest.outputs.bundle-path }}" "${NEW_ATTESTATION_NAME}"
 
-          echo "new_bundle_path=${NEW_ATTESTATION_NAME}" >> $GITHUB_OUTPUT
+          echo "attestation=${NEW_ATTESTATION_NAME}" >> $GITHUB_OUTPUT
           echo "Renamed attestation to: ${NEW_ATTESTATION_NAME}"
 
       - name: Get Short Commit Hash
@@ -135,6 +166,6 @@ jobs:
             - **Workflow Run:** [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
           files: |
-            ${{ steps.build_outputs.outputs.archive_path }}
-            ${{ steps.rename_attestation.outputs.new_bundle_path }}
+            ${{ steps.package.outputs.archive_path }}
+            ${{ steps.rename_attestation.outputs.attestation }}
           append_body: true
