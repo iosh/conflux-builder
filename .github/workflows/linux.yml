@@ -48,6 +48,10 @@ on:
 jobs:
   call-reusable-build:
     uses: ./.github/workflows/_reusable-build-and-release.yml
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     with:
       os: linux
       arch: ${{ inputs.arch }}
