@@ -134,7 +134,7 @@ jobs:
         id: attest
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: ${{ steps.package.outputs.archive_path_full }}
+          subject-path: ${{ steps.package.outputs.archive_path }}
 
       - name: Rename Attestation
         id: rename_attestation
