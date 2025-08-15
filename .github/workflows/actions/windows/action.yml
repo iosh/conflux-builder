@@ -11,7 +11,14 @@ inputs:
   arch:
     description: "CPU Architecture"
     required: true
-
+  
+  static_openssl:
+    description: "Whether to statically link OpenSSL"
+    required: true
+  compatibility_mode:
+    description: "Whether to enable compatibility mode"
+    required: true
+    
 outputs:
   build_path:
     description: "Path to the build artifacts"
@@ -20,6 +27,15 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Install windows dependencies
+      shell: bash
+      run: |
+        # conflux-rust need cmake 3(windows-2022 already install cmake3)
+        # choco install cmake.install --version=3.31.8
+        # dynamic link openssl (add VCPKGRS_TRIPLET = "x64-windows" and VCPKGRS_DYNAMIC = "1" to use dynamic link openssl)
+        # vcpkg install openssl:x64-windows
+        choco install llvm -y
+        vcpkg install openssl:x64-windows-static-md
     - name: Install Rust toolchain
       shell: bash
       working-directory: conflux-rust
