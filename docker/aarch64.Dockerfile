@@ -60,14 +60,7 @@ RUN set -ex;\
     echo "${OPENSSL_SHA256} openssl.tar.gz" | sha256sum -c -; \
     tar -xzf openssl.tar.gz; \
     cd "openssl-${OPENSSL_VERSION}"; \
-    CONFIG_FLAGS="linux-aarch64 --prefix=/opt/openssl-aarch64 --openssldir=/opt/openssl-aarch64 no-tests"; \
-    if [ "${COMPATIBILITY_MODE}" = "true" ]; then \
-    echo "OpenSSL: Compiling in compatibility mode (-march=armv8-a -mtune=generic)"; \
-    CONFIG_FLAGS="${CONFIG_FLAGS} --march=armv8-a -mtune=generic"; \
-    else \
-    echo "OpenSSL: Compiling in normal mode"; \
-    fi; \
-    perl ./Configure ${CONFIG_FLAGS}; \
+    perl ./Configure linux-aarch64 --prefix=/opt/openssl-aarch64 --openssldir=/opt/openssl-aarch64 no-tests -march=armv8-a -mtune=generic; \
     make -j$(nproc); \
     make install_sw; \
     cd ..; \
@@ -76,9 +69,9 @@ RUN set -ex;\
 
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --profile minimal --default-toolchain none -y
- 
+
 ENV PATH="/root/.cargo/bin:${PATH}"
- 
+
 
 ENV CC_aarch64_unknown_linux_gnu="clang-18"
 ENV CXX_aarch64_unknown_linux_gnu="clang++-18"
@@ -91,8 +84,9 @@ ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS="\
     -C link-arg=-lc++ \
     -C link-arg=-lc++abi"
 ENV PKG_CONFIG_ALLOW_CROSS=1
-ENV CFLAGS_aarch64_unknown_linux_gnu="--target=aarch64-linux-gnu"
-ENV CXXFLAGS_aarch64_unknown_linux_gnu="--target=aarch64-linux-gnu -stdlib=libc++"
+
+ENV CFLAGS_aarch64_unknown_linux_gnu="--target=aarch64-linux-gnu -march=armv8-a"
+ENV CXXFLAGS_aarch64_unknown_linux_gnu="--target=aarch64-linux-gnu -march=armv8-a -stdlib=libc++"
 
 ENV OPENSSL_DIR_aarch64_unknown_linux_gnu=/opt/openssl-aarch64
 ENV OPENSSL_LIB_DIR_aarch64_unknown_linux_gnu=/opt/openssl-aarch64/lib
