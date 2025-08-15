@@ -22,20 +22,22 @@ runs:
   steps:
     - name: Install Rust toolchain
       shell: bash
+      working-directory: conflux-rust
       run: |
-        rustup update --no-self-update stable
-        rustup component add --toolchain stable rustfmt rust-src
-        rustup default stable
+        rustup show
+        rustup target add ${{ inputs.arch }}-pc-windows-msvc
+        rustup component add rustfmt rust-src
 
     - name: Build Project
       shell: bash
       working-directory: conflux-rust
       run: |
         echo "--- Building Conflux for Windows ---"
-        cargo build --release
+        cargo build --release --target=${{ inputs.arch }}-pc-windows-msvc
 
     - name: Set build path output
       id: package
       shell: bash
       run: |
-        echo "build_path=target/release" >> $GITHUB_OUTPUT
+        BUILD_PATH="conflux-rust/target/${{ inputs.arch }}-pc-windows-msvc/release"
+        echo "build_path=$BUILD_PATH" >> $GITHUB_OUTPUT
