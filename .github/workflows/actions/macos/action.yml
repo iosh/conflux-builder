@@ -22,38 +22,22 @@ runs:
   steps:
     - name: Install Rust toolchain
       shell: bash
+      working-directory: conflux-rust
       run: |
-        rustup update --no-self-update stable
-        rustup component add --toolchain stable rustfmt rust-src
-        rustup default stable
-    - name: Set Build Configuration
-      id: build_config
-      shell: bash
-      run: |
-        case "${{ inputs.arch }}" in
-          "aarch64")
-            echo "target=aarch64-apple-darwin" >> $GITHUB_OUTPUT
-            echo "build_path=target/aarch64-apple-darwin/release" >> $GITHUB_OUTPUT
-            ;;
-          "x86_64")
-            echo "target=x86_64-apple-darwin" >> $GITHUB_OUTPUT
-            echo "build_path=target/x86_64-apple-darwin/release" >> $GITHUB_OUTPUT
-            ;;
-          *)
-            echo "Error: Unsupported architecture: ${{ inputs.arch }}"
-            exit 1
-            ;;
-        esac
+        rustup show
+        rustup target add ${{ inputs.arch }}-apple-darwin
+        rustup component add rustfmt rust-src
 
     - name: Build Project
       shell: bash
       working-directory: conflux-rust
       run: |
         echo "--- Building Conflux for macOS ---"
-        cargo build --release --target ${{ steps.build_config.outputs.target }}
+        cargo build --release --target=${{ inputs.arch }}-apple-darwin
 
     - name: Set build path output
       id: package
       shell: bash
       run: |
-        echo "build_path=${{ steps.build_config.outputs.build_path }}" >> $GITHUB_OUTPUT
+        BUILD_PATH="conflux-rust/target/${{ inputs.arch }}-apple-darwin/release"
+        echo "build_path=$BUILD_PATH" >> $GITHUB_OUTPUT
