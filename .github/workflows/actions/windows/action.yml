@@ -51,15 +51,15 @@ runs:
       if: inputs.static_openssl == 'true'
       shell: bash
       run: |
-        echo "Installing OpenSSL for static linking (triplet: ${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}-static-md)..."
-        vcpkg install openssl:${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}-static-md
+        echo "Installing OpenSSL for static linking (triplet: ${{ steps.vcpkg_triplet.outputs.VCPKG_TRIPLET }}-static-md)..."
+        vcpkg install openssl:${{ steps.vcpkg_triplet.outputs.VCPKG_TRIPLET }}-static-md
 
     - name: Install dynamic OpenSSL
       if: inputs.static_openssl == 'false'
       shell: bash
       run: |
-        echo "Installing OpenSSL for dynamic linking (triplet: ${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }})..."
-        vcpkg install openssl:${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}
+        echo "Installing OpenSSL for dynamic linking (triplet: ${{ steps.vcpkg_triplet.outputs.VCPKG_TRIPLET }})..."
+        vcpkg install openssl:${{ steps.vcpkg_triplet.outputs.VCPKG_TRIPLET }}
 
     - name: Install Rust toolchain
       shell: bash
@@ -91,11 +91,11 @@ runs:
         if [[ "${{ inputs.static_openssl }}" == 'true' ]]; then
           echo "Setting environment for STATIC linking."
           echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
-          echo "VCPKG_TARGET_TRIPLET=${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}-static-md" >> $GITHUB_ENV
+          echo "VCPKG_TARGET_TRIPLET=${{ steps.vcpkg_triplet.outputs.VCPKG_TRIPLET }}-static-md" >> $GITHUB_ENV
         else
           echo "Setting environment for DYNAMIC linking."
           echo "VCPKGRS_DYNAMIC=1" >> $GITHUB_ENV
-          echo "VCPKG_TARGET_TRIPLET=${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}" >> $GITHUB_ENV
+          echo "VCPKG_TARGET_TRIPLET=${{ steps.vcpkg_triplet.outputs.VCPKG_TRIPLET }}" >> $GITHUB_ENV
         fi
 
         echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
@@ -112,7 +112,7 @@ runs:
       shell: bash
       run: |
         echo "Copying OpenSSL DLLs..."
-        DLL_SOURCE_PATH="$VCPKG_INSTALLATION_ROOT/installed/${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}/bin"
+        DLL_SOURCE_PATH="$VCPKG_INSTALLATION_ROOT/installed/${{ steps.vcpkg_triplet.outputs.VCPKG_TRIPLET }}/bin"
         BUILD_TARGET_PATH="conflux-rust/target/${{ inputs.arch }}-pc-windows-msvc/release"
 
         echo "Searching for DLLs in: $DLL_SOURCE_PATH"
