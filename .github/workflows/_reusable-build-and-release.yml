@@ -76,6 +76,8 @@ jobs:
           commit_sha: ${{ inputs.commit_sha }}
           version_tag: ${{ inputs.version_tag }}
           arch: ${{ inputs.arch }}
+          static_openssl: ${{ inputs.static_openssl }}        
+          compatibility_mode: ${{ inputs.compatibility_mode }}
 
       - name: Build for macOS
         if: inputs.os == 'macos'

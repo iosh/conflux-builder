@@ -15,7 +15,18 @@ on:
         type: choice
         options:
           - x86_64
+          # - aarch64
         default: x86_64
+      static_openssl:
+        description: "Statically link OpenSSL"
+        required: true
+        type: boolean
+        default: true
+      compatibility_mode:
+        description: "Enable compatibility mode for older CPUs (disables native optimizations)"
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   call-reusable-build:
@@ -30,3 +41,5 @@ jobs:
       runner: windows-2022
       commit_sha: ${{ inputs.commit_sha }}
       version_tag: ${{ inputs.version_tag }}
+      static_openssl: ${{ inputs.static_openssl }}
+      compatibility_mode: ${{ inputs.compatibility_mode }}

@@ -11,14 +11,13 @@ inputs:
   arch:
     description: "CPU Architecture"
     required: true
-  
   static_openssl:
     description: "Whether to statically link OpenSSL"
     required: true
   compatibility_mode:
     description: "Whether to enable compatibility mode"
     required: true
-    
+
 outputs:
   build_path:
     description: "Path to the build artifacts"
@@ -27,15 +26,40 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Install windows dependencies
+    - name: Set Vcpkg Triplet based on Arch
+      shell: bash
+      run: |
+        if [[ "${{ inputs.arch }}" == "x86_64" ]]; then
+          echo "VCPKG_TRIPLET=x64-windows" >> $GITHUB_ENV
+        elif [[ "${{ inputs.arch }}" == "aarch64" ]]; then
+          echo "VCPKG_TRIPLET=arm64-windows" >> $GITHUB_ENV
+        else
+          # The architecture has not been tested, so it is currently not supported.
+          echo "::error::Unsupported architecture: ${{ inputs.arch }}"
+          exit 1
+        fi
+
+    - name: Install common dependencies
       shell: bash
       run: |
         # conflux-rust need cmake 3(windows-2022 already install cmake3)
         # choco install cmake.install --version=3.31.8
-        # dynamic link openssl (add VCPKGRS_TRIPLET = "x64-windows" and VCPKGRS_DYNAMIC = "1" to use dynamic link openssl)
-        # vcpkg install openssl:x64-windows
         choco install llvm -y
-        vcpkg install openssl:x64-windows-static-md
+
+    - name: Install static OpenSSL
+      if: inputs.static_openssl == 'true'
+      shell: bash
+      run: |
+        echo "Installing OpenSSL for static linking (triplet: ${{ env.VCPKG_TRIPLET }}-static-md)..."
+        vcpkg install openssl:${{ env.VCPKG_TRIPLET }}-static-md
+
+    - name: Install dynamic OpenSSL
+      if: inputs.static_openssl == 'false'
+      shell: bash
+      run: |
+        echo "Installing OpenSSL for dynamic linking (triplet: ${{ env.VCPKG_TRIPLET }})..."
+        vcpkg install openssl:${{ env.VCPKG_TRIPLET }}
+
     - name: Install Rust toolchain
       shell: bash
       working-directory: conflux-rust
@@ -44,16 +68,62 @@ runs:
         rustup target add ${{ inputs.arch }}-pc-windows-msvc
         rustup component add rustfmt rust-src
 
+    - name: Set Build Arguments and Environment
+      id: build_args
+      shell: bash
+      run: |
+
+        # By default Windows don't need the "rocksdb/portable" feature because it is enabled by default
+        # So we add this feature like other platforms
+        CARGO_FEATURES_FLAG="--features \"rocksdb/portable\""
+
+        if [[ "${{ inputs.compatibility_mode }}" == "true" ]]; then
+          echo "Compatibility mode ENABLED"
+          # The blst-portable feature is added for compatibility this will be disable assembly optimizations
+          
+          CARGO_FEATURES_FLAG="--features \"rocksdb/portable\" --features \"blst-portable\""
+
+        else
+          echo "Compatibility mode DISABLED"
+        fi
+
+        if [[ "${{ inputs.static_openssl }}" == 'true' ]]; then
+          echo "Setting environment for STATIC linking."
+          echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
+          echo "VCPKG_TARGET_TRIPLET=${{ env.VCPKG_TRIPLET }}-static-md" >> $GITHUB_ENV
+        else
+          echo "Setting environment for DYNAMIC linking."
+          echo "VCPKGRS_DYNAMIC=1" >> $GITHUB_ENV
+          echo "VCPKG_TARGET_TRIPLET=${{ env.VCPKG_TRIPLET }}" >> $GITHUB_ENV
+        fi
+
+        echo "cargo_features_flag=${CARGO_FEATURES_FLAG}" >> $GITHUB_OUTPUT
+
     - name: Build Project
       shell: bash
       working-directory: conflux-rust
       run: |
         echo "--- Building Conflux for Windows ---"
-        cargo build --release --target=${{ inputs.arch }}-pc-windows-msvc
+        RUSTFLAGS="-C target-cpu=haswell" cargo build --release --target=${{ inputs.arch }}-pc-windows-msvc ${{ steps.build_args.outputs.cargo_features_flag }}
+
+    - name: Copy OpenSSL DLLs (for dynamic link)
+      if: inputs.static_openssl == 'false'
+      shell: bash
+      run: |
+        echo "Copying OpenSSL DLLs..."
+        DLL_SOURCE_PATH="${{ env.VCPKG_INSTALLATION_ROOT }}/installed/${{ env.VCPKG_TRIPLET }}/bin"
+        BUILD_TARGET_PATH="conflux-rust/target/${{ inputs.arch }}-pc-windows-msvc/release"
+
+        echo "Searching for DLLs in: $DLL_SOURCE_PATH"
+        echo "Copying to: $BUILD_TARGET_PATH"
+
+        cp "$DLL_SOURCE_PATH"/*.dll "$BUILD_TARGET_PATH"/
+
+        echo "DLLs copied successfully."
 
     - name: Set build path output
       id: package
       shell: bash
       run: |
-        BUILD_PATH="conflux-rust/target/${{ inputs.arch }}-pc-windows-msvc/release"
+        BUILD_PATH="target/${{ inputs.arch }}-pc-windows-msvc/release"
         echo "build_path=$BUILD_PATH" >> $GITHUB_OUTPUT
