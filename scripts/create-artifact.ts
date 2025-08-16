@@ -70,20 +70,20 @@ async function main() {
   let baseName = `conflux-v${versionTagCleaned}-${platform}-${argv.arch}`;
 
   let suffix = "";
+
   if (platform === "linux") {
     suffix += `-glibc${argv.glibcVersion}`;
-
-    if (!argv.staticOpenssl) {
-      suffix += `-dynamic-openssl`;
-    }
-
     if (argv.opensslVersion !== "openssl-3") {
       suffix += `-${argv.opensslVersion}`;
     }
+  }
 
-    if (argv.compatibilityMode) {
-      suffix += "-portable";
-    }
+  if (!argv.staticOpenssl) {
+    suffix += `-dynamic-openssl`;
+  }
+
+  if (argv.compatibilityMode) {
+    suffix += "-portable";
   }
 
   const artifactBaseName = `${baseName}${suffix}`;
@@ -104,6 +104,21 @@ async function main() {
     path.join(packagingDir, binaryName)
   );
   await fs.copy(argv.sourceDir, packagingDir);
+
+  if (platform === "windows" && !argv.staticOpenssl) {
+    // Copy the OpenSSL DLLs to the packaging directory
+    const dllSuffix = argv.arch === "aarch64" ? "arm64" : "x64";
+    const cryptoDll = `libcrypto-3-${dllSuffix}.dll`;
+    const sslDll = `libssl-3-${dllSuffix}.dll`;
+    await fs.copy(
+      path.join(argv.buildPath, cryptoDll),
+      path.join(packagingDir, cryptoDll)
+    );
+    await fs.copy(
+      path.join(argv.buildPath, sslDll),
+      path.join(packagingDir, sslDll)
+    );
+  }
 
   const output = fs.createWriteStream(archivePath);
   const archive = archiver(platform === "windows" ? "zip" : "tar", {
