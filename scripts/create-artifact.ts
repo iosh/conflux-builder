@@ -89,7 +89,8 @@ async function main() {
   const artifactBaseName = `${baseName}${suffix}`;
   const archiveExtension = platform === "windows" ? "zip" : "tar.gz";
   const archiveName = `${artifactBaseName}.${archiveExtension}`;
-  const archivePath = path.join(argv.outputDir, archiveName);
+  // Normalize the archive path for the current platform
+  const archivePath = path.posix.join(argv.outputDir, archiveName);
 
   core.info(`Artifact base name: ${artifactBaseName}`);
   core.info(`Archive name: ${archiveName}`);

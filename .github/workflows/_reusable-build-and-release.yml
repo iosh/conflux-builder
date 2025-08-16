@@ -150,6 +150,7 @@ jobs:
 
       - name: Get Short Commit Hash
         id: get_hash
+        shell: bash
         run: echo "short_hash=$(echo ${{ inputs.commit_sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
       - name: Create or Update Release and Upload Assets
