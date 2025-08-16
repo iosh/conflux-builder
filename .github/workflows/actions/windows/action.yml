@@ -27,12 +27,13 @@ runs:
   using: "composite"
   steps:
     - name: Set Vcpkg Triplet based on Arch
+      id: vcpkg_triplet
       shell: bash
       run: |
         if [[ "${{ inputs.arch }}" == "x86_64" ]]; then
-          echo "VCPKG_TRIPLET=x64-windows" >> $GITHUB_ENV
+          echo "VCPKG_TRIPLET=x64-windows" >> $GITHUB_OUTPUT
         elif [[ "${{ inputs.arch }}" == "aarch64" ]]; then
-          echo "VCPKG_TRIPLET=arm64-windows" >> $GITHUB_ENV
+          echo "VCPKG_TRIPLET=arm64-windows" >> $GITHUB_OUTPUT
         else
           # The architecture has not been tested, so it is currently not supported.
           echo "::error::Unsupported architecture: ${{ inputs.arch }}"
@@ -50,15 +51,15 @@ runs:
       if: inputs.static_openssl == 'true'
       shell: bash
       run: |
-        echo "Installing OpenSSL for static linking (triplet: ${{ env.VCPKG_TRIPLET }}-static-md)..."
-        vcpkg install openssl:${{ env.VCPKG_TRIPLET }}-static-md
+        echo "Installing OpenSSL for static linking (triplet: ${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}-static-md)..."
+        vcpkg install openssl:${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}-static-md
 
     - name: Install dynamic OpenSSL
       if: inputs.static_openssl == 'false'
       shell: bash
       run: |
-        echo "Installing OpenSSL for dynamic linking (triplet: ${{ env.VCPKG_TRIPLET }})..."
-        vcpkg install openssl:${{ env.VCPKG_TRIPLET }}
+        echo "Installing OpenSSL for dynamic linking (triplet: ${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }})..."
+        vcpkg install openssl:${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}
 
     - name: Install Rust toolchain
       shell: bash
@@ -81,7 +82,7 @@ runs:
           echo "Compatibility mode ENABLED"
           # The blst-portable feature is added for compatibility this will be disable assembly optimizations
           
-          CARGO_FEATURES_FLAG="--features \"rocksdb/portable\" --features \"blst-portable\""
+          CARGO_FEATURES_FLAG="--features \"rocksdb/portable,blst-portable\""
 
         else
           echo "Compatibility mode DISABLED"
@@ -90,16 +91,15 @@ runs:
         if [[ "${{ inputs.static_openssl }}" == 'true' ]]; then
           echo "Setting environment for STATIC linking."
           echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
-          echo "VCPKG_TARGET_TRIPLET=${{ env.VCPKG_TRIPLET }}-static-md" >> $GITHUB_ENV
+          echo "VCPKG_TARGET_TRIPLET=${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}-static-md" >> $GITHUB_ENV
         else
           echo "Setting environment for DYNAMIC linking."
           echo "VCPKGRS_DYNAMIC=1" >> $GITHUB_ENV
-          echo "VCPKG_TARGET_TRIPLET=${{ env.VCPKG_TRIPLET }}" >> $GITHUB_ENV
+          echo "VCPKG_TARGET_TRIPLET=${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}" >> $GITHUB_ENV
         fi
 
+        echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
         echo "cargo_features_flag=${CARGO_FEATURES_FLAG}" >> $GITHUB_OUTPUT
-
-        echo "VCPKG_ROOT=${{ env.VCPKG_INSTALLATION_ROOT }}" >> $GITHUB_ENV
     - name: Build Project
       shell: bash
       working-directory: conflux-rust
@@ -112,7 +112,7 @@ runs:
       shell: bash
       run: |
         echo "Copying OpenSSL DLLs..."
-        DLL_SOURCE_PATH="${{ env.VCPKG_INSTALLATION_ROOT }}/installed/${{ env.VCPKG_TRIPLET }}/bin"
+        DLL_SOURCE_PATH="$VCPKG_INSTALLATION_ROOT/installed/${{ vcpkg_triplet.outputs.VCPKG_TRIPLET }}/bin"
         BUILD_TARGET_PATH="conflux-rust/target/${{ inputs.arch }}-pc-windows-msvc/release"
 
         echo "Searching for DLLs in: $DLL_SOURCE_PATH"

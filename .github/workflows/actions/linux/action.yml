@@ -93,7 +93,7 @@ runs:
           
           DOCKER_BUILD_ARGS="--build-arg COMPATIBILITY_MODE=true"
 
-          CARGO_FEATURES_FLAG="--features \"rocksdb/portable\" --features \"blst-portable\""
+          CARGO_FEATURES_FLAG="--features \"rocksdb/portable,blst-portable\""
 
         else
           echo "Compatibility mode DISABLED"
