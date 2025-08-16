@@ -99,6 +99,7 @@ runs:
 
         echo "cargo_features_flag=${CARGO_FEATURES_FLAG}" >> $GITHUB_OUTPUT
 
+        echo "VCPKG_ROOT=${{ env.VCPKG_INSTALLATION_ROOT }}" >> $GITHUB_ENV
     - name: Build Project
       shell: bash
       working-directory: conflux-rust
