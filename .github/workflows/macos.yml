@@ -1,5 +1,7 @@
 name: Build Conflux (macOS)
 
+run-name: Build ${{ inputs.version_tag }} - macOS (${{ inputs.arch }})
+
 on:
   workflow_dispatch:
     inputs:

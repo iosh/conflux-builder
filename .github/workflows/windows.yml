@@ -1,5 +1,7 @@
 name: Build Conflux (Windows)
 
+run-name: Build ${{ inputs.version_tag }} - Windows (${{ inputs.arch }})
+
 on:
   workflow_dispatch:
     inputs:
