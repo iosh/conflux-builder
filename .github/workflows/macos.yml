@@ -16,7 +16,7 @@ on:
         required: true
         type: choice
         options:
-          - x86_64
+          # - x86_64
           - aarch64
       run_id: 
         description: "Add run ID for the workflow name"

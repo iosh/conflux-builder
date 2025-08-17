@@ -6,7 +6,13 @@ This repository provides a trusted build system for the [conflux-rust](https://g
 
 Binaries compiled by this workflow are published on this repository's [Releases Page](https://github.com/iosh/conflux-builder/releases). Each release includes a variety of assets for different operating systems and CPU architectures.
 
+## Platform Support
 
+Conflux is primarily developed for the following platforms:
+
+- Linux (x86_64, aarch64)
+- macOS (aarch64)
+- Windows (x86_64)
 
 ## CPU Compatibility
 
