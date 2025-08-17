@@ -1,6 +1,6 @@
 name: Build Conflux (Windows)
 
-run-name: Build ${{ inputs.version_tag }} - Windows (${{ inputs.arch }})
+run-name: Build ${{ inputs.version_tag }} - Windows (${{ inputs.arch }}) - ${{ inputs.run_id }}
 
 on:
   workflow_dispatch:
@@ -29,6 +29,10 @@ on:
         required: true
         type: boolean
         default: false
+      run_id: 
+        description: "Add run ID for the workflow name"
+        type: string
+        default: ""
 
 jobs:
   call-reusable-build:

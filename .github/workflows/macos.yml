@@ -1,6 +1,6 @@
 name: Build Conflux (macOS)
 
-run-name: Build ${{ inputs.version_tag }} - macOS (${{ inputs.arch }})
+run-name: Build ${{ inputs.version_tag }} - macOS (${{ inputs.arch }}) - ${{ inputs.run_id }}
 
 on:
   workflow_dispatch:
@@ -18,6 +18,10 @@ on:
         options:
           - x86_64
           - aarch64
+      run_id: 
+        description: "Add run ID for the workflow name"
+        type: string
+        default: ""
 
 jobs:
   call-reusable-build:
