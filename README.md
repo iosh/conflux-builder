@@ -8,8 +8,6 @@ Binaries compiled by this workflow are published on this repository's [Releases 
 
 ## Platform Support
 
-Conflux is primarily developed for the following platforms:
-
 - Linux (x86_64, aarch64)
 - macOS (aarch64)
 - Windows (x86_64)
