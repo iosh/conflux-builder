@@ -33,7 +33,7 @@ runs:
       working-directory: conflux-rust
       run: |
         echo "--- Building Conflux for macOS ---"
-        cargo build --release --target=${{ inputs.arch }}-apple-darwin
+        RUSTFLAGS="-L $(brew --prefix bzip2)/lib -l bz2" cargo build --release --target=${{ inputs.arch }}-apple-darwin
 
     - name: Set build path output
       id: package
