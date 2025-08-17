@@ -33,7 +33,8 @@ You need to install the latest [Microsoft Visual C++ Redistributable Version](ht
 
 ## Security
 
-Each build artifact is accompanied by a provenance file. This attestation provides a verifiable guarantee that the artifact was built from the specified source within this trusted GitHub Actions workflow.
+Every build artifact is accompanied by a `-attestation.json
+` file. This attestation provides a verifiable guarantee that the artifact was built from the specified source code entirely within this trusted GitHub Actions workflow, ensuring transparency and security.
 
 ## License
 
