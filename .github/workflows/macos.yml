@@ -16,7 +16,7 @@ on:
         required: true
         type: choice
         options:
-          # - x86_64
+          # - x86_64 # build error by fs-swap-0.2.6 `"stdcall"` is not a supported ABI for the current target
           - aarch64
       run_id: 
         description: "Add run ID for the workflow name"
