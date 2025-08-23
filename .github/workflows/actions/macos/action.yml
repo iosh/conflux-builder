@@ -28,6 +28,10 @@ runs:
         rustup target add ${{ inputs.arch }}-apple-darwin
         rustup component add rustfmt rust-src
 
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        brew install bzip2
     - name: Build Project
       shell: bash
       working-directory: conflux-rust
