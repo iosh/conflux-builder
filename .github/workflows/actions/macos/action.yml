@@ -32,6 +32,14 @@ runs:
       shell: bash
       run: |
         brew install bzip2
+    - name: Setup Env
+      shell: bash
+      run: |
+        if [[ "${{ inputs.static_openssl }}" == 'true' ]]; then
+          echo "Setting environment for STATIC linking."
+          echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
+        fi
+
     - name: Build Project
       shell: bash
       working-directory: conflux-rust
@@ -43,5 +51,5 @@ runs:
       id: package
       shell: bash
       run: |
-        BUILD_PATH="conflux-rust/target/${{ inputs.arch }}-apple-darwin/release"
+        BUILD_PATH="target/${{ inputs.arch }}-apple-darwin/release"
         echo "build_path=$BUILD_PATH" >> $GITHUB_OUTPUT
