@@ -11,7 +11,10 @@ inputs:
   arch:
     description: "CPU Architecture"
     required: true
-
+  static_openssl:
+    description: "Whether to statically link OpenSSL"
+    required: true
+    default: "true"
 outputs:
   build_path:
     description: "Path to the build artifacts"

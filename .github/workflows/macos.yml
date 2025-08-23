@@ -18,6 +18,12 @@ on:
         options:
           # - x86_64 # build error by fs-swap-0.2.6 `"stdcall"` is not a supported ABI for the current target
           - aarch64
+      static_openssl:
+        description: "Statically link OpenSSL"
+        required: true
+        type: boolean
+        default: true
+
       run_id: 
         description: "Add run ID for the workflow name"
         type: string
@@ -36,3 +42,4 @@ jobs:
       runner: ${{ inputs.arch == 'aarch64' && 'macos-14' || 'macos-13' }}
       commit_sha: ${{ inputs.commit_sha }}
       version_tag: ${{ inputs.version_tag }}
+      static_openssl: ${{ inputs.static_openssl }}
