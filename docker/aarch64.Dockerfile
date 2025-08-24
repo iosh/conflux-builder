@@ -43,11 +43,11 @@ RUN set -ex;\
     OPENSSL_VERSION=""; \
     OPENSSL_SHA256=""; \
     case "${OPENSSL_CHOICE}" in \
-    "openssl-3") \
+    "3") \
     OPENSSL_VERSION="3.5.1"; \
     OPENSSL_SHA256="529043b15cffa5f36077a4d0af83f3de399807181d607441d734196d889b641f"; \
     ;; \
-    "openssl-1") \
+    "1") \
     OPENSSL_VERSION="1.1.1w"; \
     OPENSSL_SHA256="cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8"; \
     ;; \

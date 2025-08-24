@@ -46,7 +46,7 @@ async function main() {
     })
     .option("openssl-version", {
       type: "string",
-      default: "openssl-3",
+      default: "3",
       description: "OpenSSL version",
     })
     .option("static-openssl", {
@@ -73,7 +73,7 @@ async function main() {
 
   if (platform === "linux") {
     suffix += `-glibc${argv.glibcVersion}`;
-    if (argv.opensslVersion !== "openssl-3") {
+    if (argv.opensslVersion !== "3") {
       suffix += `-${argv.opensslVersion}`;
     }
   }

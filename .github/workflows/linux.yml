@@ -33,9 +33,9 @@ on:
         required: false
         type: choice
         options:
-          - openssl-3
-          - openssl-1
-        default: "openssl-3"
+          - "3"
+          - "1"
+        default: "3"
       static_openssl:
         description: "Statically link OpenSSL (for Linux builds)"
         required: true
@@ -46,7 +46,7 @@ on:
         required: true
         type: boolean
         default: false
-      run_id: 
+      run_id:
         description: "Add run ID for the workflow name"
         type: string
         default: ""
