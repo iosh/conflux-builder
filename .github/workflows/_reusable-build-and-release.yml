@@ -38,6 +38,7 @@ on:
 jobs:
   build-and-release:
     runs-on: ${{ inputs.runner }}
+    timeout-minutes: 120
     permissions:
       contents: write
       id-token: write
