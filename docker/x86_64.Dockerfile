@@ -3,8 +3,10 @@ ARG UBUNTU_VERSION=20.04
 FROM ubuntu:${UBUNTU_VERSION}
 
 
-ARG COMPATIBILITY_MODE=false
 ARG OPENSSL_CHOICE=3
+
+ARG CPU_MARCH=haswell
+ARG RUST_TARGET_CPU=haswell
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -39,7 +41,7 @@ RUN set -ex;\
     echo "${OPENSSL_SHA256} openssl.tar.gz" | sha256sum -c -; \
     tar -xzf openssl.tar.gz; \
     cd "openssl-${OPENSSL_VERSION}"; \
-    ./config --prefix=/opt/openssl --openssldir=/opt/openssl no-tests -march=haswell; \
+    ./config --prefix=/opt/openssl --openssldir=/opt/openssl no-tests "-march=${CPU_MARCH}"; \
     make -j$(nproc); \
     make install_sw; \
     cd ..; \
@@ -54,11 +56,11 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 ENV CC=clang-18
 ENV CXX=clang++-18
 
-ENV CFLAGS="-march=haswell"
-ENV CXXFLAGS="-march=haswell -std=c++11 -stdlib=libc++"
+ENV CFLAGS="-march=${CPU_MARCH}"
+ENV CXXFLAGS="-march=${CPU_MARCH} -std=c++11 -stdlib=libc++"
 ENV LDFLAGS="-stdlib=libc++"
 
-ENV RUSTFLAGS="-C target-cpu=haswell"
+ENV RUSTFLAGS="-C target-cpu=${RUST_TARGET_CPU}"
 
 ENV OPENSSL_DIR=/opt/openssl
 ENV OPENSSL_LIB_DIR=/opt/openssl/lib64

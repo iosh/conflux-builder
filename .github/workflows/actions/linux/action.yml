@@ -91,7 +91,9 @@ runs:
         if [[ "${{ inputs.compatibility_mode }}" == "true" ]]; then
           echo "Compatibility mode ENABLED"
           
-          DOCKER_BUILD_ARGS="--build-arg COMPATIBILITY_MODE=true"
+          if [[ "${{ inputs.arch }}" == "x86_64" ]]; then
+            DOCKER_BUILD_ARGS="--build-arg CPU_MARCH=nehalem --build-arg RUST_TARGET_CPU=nehalem"
+          fi
 
           CARGO_FEATURES_FLAG="--features \"rocksdb/portable,blst-portable\""
 
