@@ -46,9 +46,11 @@ runs:
     - name: Build Project
       shell: bash
       working-directory: conflux-rust
+      env:
+        CMAKE_POLICY_VERSION_MINIMUM: 3.5
       run: |
         echo "--- Building Conflux for macOS ---"
-        CMAKE_ARGS="-DCMAKE_POLICY_VERSION_MINIMUM=3.5" RUSTFLAGS="-L $(brew --prefix bzip2)/lib -l bz2" cargo build --release --target=${{ inputs.arch }}-apple-darwin
+        RUSTFLAGS="-L $(brew --prefix bzip2)/lib -l bz2" cargo build --release --target=${{ inputs.arch }}-apple-darwin
 
     - name: Set build path output
       id: package
