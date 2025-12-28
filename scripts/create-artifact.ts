@@ -86,7 +86,7 @@ async function main() {
     }
 
     if (argv.compatibilityMode) {
-      suffix += "-portable";
+      suffix += "-compatible";
     }
 
     const artifactBaseName = `${baseName}${suffix}`;

@@ -14,9 +14,9 @@ Binaries compiled by this workflow are published on this repository's [Releases 
 
 ## CPU Compatibility
 
-The x64 binaries provided here target the Haswell CPU architecture. For broader compatibility, a portable version (with a -portable suffix) is also available.
+The x64 binaries provided here target the Haswell CPU architecture. For broader compatibility, a compatible version (with a -compatible suffix) is also available.
 
-If you encounter an "Illegal Instruction" error when running conflux, please try using the portable version instead.
+If you encounter an "Illegal Instruction" error when running conflux, please try using the compatible version instead.
 
 If you still get an error, please open an issue.
 

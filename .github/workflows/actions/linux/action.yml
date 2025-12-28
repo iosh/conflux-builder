@@ -99,6 +99,10 @@ runs:
 
         else
           echo "Compatibility mode DISABLED"
+
+          if [[ "${{ inputs.arch }}" == "x86_64" ]]; then
+            DOCKER_BUILD_ARGS="--build-arg CPU_MARCH=haswell --build-arg RUST_TARGET_CPU=haswell"
+          fi
         fi
 
 

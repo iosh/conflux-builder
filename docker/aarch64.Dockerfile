@@ -4,6 +4,8 @@ FROM ubuntu:${UBUNTU_VERSION}
 
 ARG UBUNTU_CODENAME=focal
 ARG OPENSSL_CHOICE=3
+ARG AARCH64_MARCH=armv8-a
+ARG AARCH64_MTUNE=generic
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -59,7 +61,7 @@ RUN set -ex;\
     echo "${OPENSSL_SHA256} openssl.tar.gz" | sha256sum -c -; \
     tar -xzf openssl.tar.gz; \
     cd "openssl-${OPENSSL_VERSION}"; \
-    perl ./Configure linux-aarch64 --prefix=/opt/openssl-aarch64 --openssldir=/opt/openssl-aarch64 no-tests -march=armv8-a -mtune=generic; \
+    perl ./Configure linux-aarch64 --prefix=/opt/openssl-aarch64 --openssldir=/opt/openssl-aarch64 no-tests -march="${AARCH64_MARCH}" -mtune="${AARCH64_MTUNE}"; \
     make -j$(nproc); \
     make install_sw; \
     cd ..; \
@@ -84,8 +86,8 @@ ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS="\
     -C link-arg=-lc++abi"
 ENV PKG_CONFIG_ALLOW_CROSS=1
 
-ENV CFLAGS_aarch64_unknown_linux_gnu="--target=aarch64-linux-gnu -march=armv8-a"
-ENV CXXFLAGS_aarch64_unknown_linux_gnu="--target=aarch64-linux-gnu -march=armv8-a -stdlib=libc++"
+ENV CFLAGS_aarch64_unknown_linux_gnu="--target=aarch64-linux-gnu -march=${AARCH64_MARCH}"
+ENV CXXFLAGS_aarch64_unknown_linux_gnu="--target=aarch64-linux-gnu -march=${AARCH64_MARCH} -stdlib=libc++"
 
 ENV OPENSSL_DIR_aarch64_unknown_linux_gnu=/opt/openssl-aarch64
 ENV OPENSSL_LIB_DIR_aarch64_unknown_linux_gnu=/opt/openssl-aarch64/lib
